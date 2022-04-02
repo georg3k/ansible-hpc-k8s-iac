@@ -1,0 +1,61 @@
+---
+
+# Main domain name for cluster subnet
+domain_name: 'example.com'
+
+# Main domain name in LDAP base DN format
+domain_ldap: 'dc=example,dc=com'
+
+# List of subdomain names of control node (required)
+control_aliases:
+  ns:       "ns"
+  ldap:     "ldap"
+  nfs:      "nfs"
+  registry: "registry"
+  main:     "control-node"
+
+# Cluster networks definition in CIDR format: <control node IP>/<prefix>
+# Only divisible by 8 prefixes allowed!
+networks:
+  public:     { cidr:  "1.2.3.4/24", gw: "1.2.3.10" }
+  private:    { cidr: "10.1.1.1/24", gw: "" }
+  management: { cidr: "10.1.0.1/24", gw: "" }
+
+# DNS to use for outbound connections
+authorized_dns: "1.2.3.20"
+
+# Default password for root user (LDAP does not manage root accounts) 
+root_passwd: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          34333963663365616463663763343837636436396639643834353234383033643963306533663066
+          3837313830636637663330656166393166653764383062640a346630363966616633316339623138
+          35646533363931636631626431376131386333366263653362653330353964326634356237633238
+          6163316439376565380a383831633535633733333062356539626332653666363339386639383039
+          3839
+
+# Default password for full admin access (used for LDAP etc.)
+admin_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          39336666343331633036306136656331303234343239303834633139336464613938356331663537
+          3061323137383564306463626535373364613431346165370a303834336232666537333130656137
+          62633136353237643631323164643537323366313763353239326566306532353863613832346164
+          6233653333373633370a616334316334343564653963623462383663346635383136623664663564
+          3433
+
+# Default password for read-only access (used for LDAP etc.)
+readonly_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          61616635323662623030396433396632323763346466656462643661346330353763646161336139
+          3036326437633562306430393333383030343031346431380a636166363938343662356136633436
+          34343433656264336166363332313435643662333933323931393833363135653632396535616266
+          3431303761656534390a623831363861303735626366326537643437666166626361316665643637
+          6230
+
+# Remote auth (required for first connection)
+ansible_user: root
+ansible_ssh_pass: '{{ root_passwd }}'
+
+# Linux distribution to install via PXE (RHEL family distro expected)
+distro_url: 'https://mirror.yandex.ru/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20220104-dvd1.iso'
+distro_chk: '296aa0829e1fa43ca3c16f93927d3b76b902adc3602cad532d45793896b6f943'
+

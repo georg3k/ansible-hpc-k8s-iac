@@ -1,0 +1,10 @@
+---
+
+interfaces:
+  - { name: "eth0", type: "ethernet", mac: "00:00:00:00:00:00", subnet: "public" }
+  - { name: "eth1",  type: "ethernet", mac: "00:00:00:00:00:01", subnet: "private" }
+  - { name: "eth2",  type: "ethernet", mac: "00:00:00:00:00:02", subnet: "private" }
+  - { name: "eth3", type: "ethernet", mac: "00:00:00:00:00:03", subnet: "management" }
+  - { name: "bond0",   type: "bond", subnet: "private" }
+  - { name: "bond0b0", type: "bond-slave", ifname: "eth1", master: "bond0" }
+  - { name: "bond0b1", type: "bond-slave", ifname: "eth2", master: "bond0" }

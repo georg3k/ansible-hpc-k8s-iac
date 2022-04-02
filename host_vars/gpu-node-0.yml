@@ -1,0 +1,15 @@
+---
+
+interfaces:
+  - { name: "eth0", type: "ethernet", mac: "02:00:00:00:00:00", subnet: "private" }
+  - { name: "eth1", type: "ethernet", mac: "02:00:00:00:00:01", subnet: "private" }
+  - { name: "bond0",   type: "bond", subnet: "private" }
+  - { name: "bond0b0", type: "bond-slave", ifname: "eth0", master: "bond0" }
+  - { name: "bond0b1", type: "bond-slave", ifname: "eth1",  master: "bond0" }
+
+properties:
+  cpus: 4
+  memory: 1024
+  sockets: 1
+  cps: 4
+  tpc: 1
