@@ -1,0 +1,15 @@
+---
+  
+- name: Web cluster nodes setup
+  hosts: cpu_nodes
+  become: True
+  ignore_unreachable: True
+  roles:
+  - network
+
+- name: Compute cluster setup 
+  hosts: gpu_nodes
+  become: True
+  ignore_unreachable: True
+  roles:
+  - network

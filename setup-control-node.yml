@@ -1,0 +1,7 @@
+---
+
+- name: Control nodes setup
+  hosts: control_nodes
+  become: True
+  roles:
+  - network      # General network settings

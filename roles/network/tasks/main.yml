@@ -1,0 +1,119 @@
+---
+
+- name: Set hostname
+  hostname:
+    name: '{{ inventory_hostname }}'
+    use: systemd
+
+- name: Enable routing
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: yes
+  when: inventory_hostname in groups.control_nodes
+  
+- name: Setup control node interfaces
+  community.general.nmcli:
+    conn_name: "{{ item.name }}"
+    method4: manual
+    ip4: "{{ networks[item.subnet].cidr }}"
+    gw4: "{{ networks[item.subnet].gw }}"
+    dns4: "{{ networks[item.subnet].cidr | ipaddr('address') }}"
+    dns4_search: "{{ domain_name }}"
+    type: "{{ item.type }}"
+    zone: "{{ item.subnet }}"
+    state: present
+    autoconnect: yes
+  when: (item.type == "ethernet") and
+        (inventory_hostname == 'control-node')
+  with_items:
+    - "{{ interfaces }}"
+  
+- name: Setup cluster node interfaces
+  community.general.nmcli:
+    conn_name: "{{ item.name }}"
+    method4: auto
+    type: "{{ item.type }}"
+    zone: "{{ item.subnet }}"
+    #mac: "{{ item.mac }}"
+    state: present
+    autoconnect: yes
+  when: (item.type == "ethernet") and
+        (inventory_hostname != 'control-node')
+  with_items:
+    - "{{ interfaces }}"
+  
+- name: Setup control node bond interfaces
+  community.general.nmcli:
+    conn_name: "{{ item.name }}"
+    method4: manual
+    ip4: "{{ networks[item.subnet].cidr }}" 
+    gw4: "{{ networks[item.subnet].gw }}"
+    type: bond
+    zone: "{{ item.subnet }}"
+    mode: active-backup
+    state: present
+    autoconnect: yes
+  when: (item.type == "bond") and
+        (inventory_hostname == 'control-node')
+  with_items:
+    - "{{ interfaces }}"
+  
+- name: Setup cluster node bond interfaces
+  community.general.nmcli:
+    conn_name: "{{ item.name }}"
+    method4: auto
+    type: bond
+    zone: "{{ item.subnet }}"
+    mode: active-backup
+    state: present
+    autoconnect: yes
+  when: (item.type == "bond") and
+        (inventory_hostname != 'control-node')
+  with_items:
+    - "{{ interfaces }}"
+  
+- name: Setup node bond-slave interfaces
+  community.general.nmcli:
+    conn_name: "{{ item.name }}"
+    type: bond-slave
+    ifname: "{{ item.ifname }}"
+    master: "{{ item.master }}"
+    state: present
+    autoconnect: yes
+  when: item.type == "bond-slave"
+  with_items:
+    - "{{ interfaces }}"
+  
+- name: Ensure existence of firewall zones
+  ansible.posix.firewalld:
+    zone: '{{ item }}'
+    state: present
+    permanent: true
+  with_items:
+    - private
+    - public
+    - management
+  notify: Reload firewalld
+  
+- name: Add connections to corresponding firewall zones
+  ansible.posix.firewalld:
+    zone: '{{ item.subnet }}'
+    interface: '{{ item.name }}'
+    permanent: yes
+    state: enabled
+  when: (item.type == "ethernet") or
+        (item.type == "bond")
+  with_items:
+    - "{{ interfaces }}"
+  notify: Reload firewalld
+  
+- name: Enable NAT (firewall masquerading)
+  ansible.posix.firewalld:
+    masquerade: yes
+    state: enabled
+    permanent: yes
+    zone: public
+  when: inventory_hostname in groups.control_nodes
+  notify: Reload firewalld
+  
