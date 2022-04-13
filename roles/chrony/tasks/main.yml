@@ -1,0 +1,35 @@
+---
+
+- name: Set timezone 
+  community.general.timezone:
+    name: Europe/Moscow
+
+- name: Install chrony
+  dnf:
+    name: chrony
+    state: latest
+
+- name: Configure chrony as server
+  template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+  notify: Restart chrony
+  when: inventory_hostname in groups.control_nodes
+
+- name: Allow NTP traffic
+  ansible.posix.firewalld:
+    service: ntp
+    zone: '{{ item }}'
+    permanent: yes
+    state: enabled
+  with_items:
+    - private
+    - management
+  when: inventory_hostname in groups.control_nodes
+  notify: Reload firewalld
+
+- name: Start and enable chrony
+  service:
+    name: chronyd
+    state: started
+    enabled: true

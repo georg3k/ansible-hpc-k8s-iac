@@ -6,6 +6,7 @@
   ignore_unreachable: True
   roles:
   - network
+  - chrony
 
 - name: Compute cluster setup 
   hosts: gpu_nodes
@@ -13,3 +14,4 @@
   ignore_unreachable: True
   roles:
   - network
+  - chrony

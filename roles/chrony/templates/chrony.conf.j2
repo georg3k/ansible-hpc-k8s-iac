@@ -1,0 +1,14 @@
+server 0.europe.pool.ntp.org iburst
+server 1.europe.pool.ntp.org iburst
+server 2.europe.pool.ntp.org iburst
+server 3.europe.pool.ntp.org iburst
+
+driftfile /var/lib/chrony/drift
+local stratum 8
+manual
+makestep 1.0 3
+rtcsync
+
+{% for network in networks.keys() if (network != 'public') %}
+allow {{ networks[network].cidr }}
+{% endfor %}
