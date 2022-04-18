@@ -6,3 +6,4 @@
   roles:
   - network      # General network services
   - chrony       # Time sync service
+  - dns          # BIND9 DNS service

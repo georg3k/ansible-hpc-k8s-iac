@@ -1,0 +1,70 @@
+// Ansible generated template, do not edit!
+
+options {
+    directory "/var/named";
+    dump-file "/var/named/data/cache_dump.db";
+    statistics-file "/var/named/data/named_stats.txt";
+    memstatistics-file "/var/named/data/named_mem_stats.txt";
+    secroots-file "/var/named/data/named.secroots";
+    recursing-file "/var/named/data/named.recursing";
+    
+    allow-query {
+        localhost;
+        {{ networks.private.cidr }};
+        {{ networks.management.cidr }};
+    };
+        
+    allow-recursion {
+        localhost;
+        {{ networks.private.cidr }};
+        {{ networks.management.cidr }};
+    };
+
+    forwarders {
+        {{ authorized_dns }};
+    };
+    
+    recursion yes;
+    dnssec-enable no;
+    dnssec-validation no;
+    managed-keys-directory "/var/named/dynamic";
+    pid-file "/run/named/named.pid";
+    session-keyfile "/run/named/session.key";
+    include "/etc/crypto-policies/back-ends/bind.config";
+};
+
+logging {
+        channel default_debug {
+            file "data/named.run";
+            severity dynamic;
+        };
+};
+
+zone "{{ domain_name }}" IN {
+    type master;
+    file "private.db";
+    allow-update { none; };
+};
+
+zone "management.{{ domain_name }}" IN {
+    type master;
+    file "management.db";
+    allow-update { none; };
+};
+
+zone "{{ (networks.private.cidr | ipaddr('revdns')).split('.')[4 - (((networks.private.cidr | ipaddr('prefix')) / 8) | int) : 4] | join('.') }}.in-addr.arpa" IN {
+                            
+    type master;
+    file "private_rev.db";
+    allow-update { none; };
+};
+
+zone "{{ (networks.management.cidr | ipaddr('revdns')).split('.')[4 - (((networks.management.cidr | ipaddr('prefix')) / 8) | int) : 4] | join('.') }}.in-addr.arpa" IN {
+                            
+    type master;
+    file "management_rev.db";
+    allow-update { none; };
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";

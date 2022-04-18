@@ -1,0 +1,21 @@
+; Ansible generated template, do not edit!
+
+$TTL 1m
+@   IN  SOA {{ control_aliases.ns }}.{{ domain_name }}. admin.{{ domain_name }}. (
+    3           ;Serial
+    3600        ;Refresh
+    1800        ;Retry
+    604800      ;Expire
+    60          ;Minimum TTL
+)
+
+@              IN NS {{ control_aliases.ns }}.{{ domain_name }}.
+{% for alias in control_aliases.values() %}
+{{ "%-14s" | format(alias) }} IN A  {{ networks.management.cidr | ipaddr('address') }}
+{% endfor %}
+{% for host in groups["cpu_nodes"] %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 99) }}
+{% endfor %}
+{% for host in groups["gpu_nodes"] %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(host) + 199) }}
+{% endfor %}

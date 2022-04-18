@@ -1,0 +1,14 @@
+---
+
+- name: Restart named
+  service:
+    name: named
+    state: restarted
+  
+- name: Restart NetworkManager
+  service:
+    name: NetworkManager
+    state: restarted
+
+- name: Reload firewalld
+  shell: "firewall-cmd --reload"

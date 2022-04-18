@@ -1,0 +1,32 @@
+; Ansible generated template, do not edit!
+
+$TTL 1m
+@   IN  SOA {{ control_aliases.ns }}.{{ domain_name }}.  admin.{{ domain_name }}. (
+    3           ;Serial
+    3600        ;Refresh
+    1800        ;Retry
+    604800      ;Expire
+    60          ;Minimum TTL
+)
+
+@   IN NS  {{ control_aliases.ns }}.{{ domain_name }}.
+{{ "%-3s" | format ((networks.management.cidr
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.management.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ control_aliases.main }}.{{ domain_name }}.
+{% for host in groups["cpu_nodes"] %}
+{{ "%-3s" | format ((networks.management.cidr
+    | ipaddr('address')
+    | ipmath(groups["cpu_nodes"].index(host) + 99)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.management.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.management.{{ domain_name }}. 
+{% endfor %}
+{% for host in groups["gpu_nodes"] %}
+{{ "%-3s" | format ((networks.management.cidr
+    | ipaddr('address')
+    | ipmath(groups["gpu_nodes"].index(host) + 199)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.management.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.management.{{ domain_name }}. 
+{% endfor %}

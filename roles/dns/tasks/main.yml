@@ -1,0 +1,70 @@
+---
+
+- name: Install BIND9
+  package:
+    name: ['bind', 'bind-utils']
+    state: latest
+  
+- name: Generate named.conf template
+  template:
+    src: named.conf.j2
+    dest: /etc/named.conf
+  notify: Restart named
+  
+- name: Generate private subnet db template
+  template:
+    src: private.db.j2
+    dest: /var/named/private.db
+  notify: Restart named
+  
+- name: Generate private subnet reverse lookup db template
+  template:
+    src: private_rev.db.j2
+    dest: /var/named/private_rev.db
+  notify: Restart named
+
+- name: Generate management subnet db template
+  template:
+    src: management.db.j2
+    dest: /var/named/management.db
+  notify: Restart named
+  
+- name: Generate management subnet reverse lookup db template
+  template:
+    src: management_rev.db.j2
+    dest: /var/named/management_rev.db
+  notify: Restart named
+  
+- name: Allow DNS traffic
+  ansible.posix.firewalld:
+    service: dns
+    zone: '{{ item }}'
+    permanent: yes
+    state: enabled
+  with_items:
+    - private
+    - management
+  notify: Reload firewalld
+  
+- name: Start and enable BIND9 service
+  service:
+    name: named
+    state: started
+    enabled: true
+  register: BIND9_started
+
+- name: Wait for BIND9 bringing up
+  wait_for:
+    host: '{{ control_aliases.main }}'
+    port: 53
+    delay: 10
+    state: present
+
+- name: Trigger NetworkManager restart
+  command: echo
+  when: BIND9_started.changed
+  notify: Restart NetworkManager
+
+- name: Sync handlers
+  meta: flush_handlers
+  
