@@ -1,0 +1,30 @@
+---
+
+- name: Install DHCP server
+  dnf:
+    name: dhcp-server
+    state: latest
+  
+- name: Generate dhcpd.conf template
+  template:
+    src: dhcpd.conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+  notify: Restart dhcpd
+  
+- name: Allow DHCP traffic
+  ansible.posix.firewalld:
+    service: dhcp
+    zone: '{{ item }}'
+    permanent: yes
+    state: enabled
+  with_items:
+    - private
+    - management
+  notify: Reload firewalld
+  
+- name: Start and enable DHCP service
+  service:
+    name: dhcpd
+    state: started
+    enabled: true
+  

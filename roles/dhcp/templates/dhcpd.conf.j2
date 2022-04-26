@@ -1,0 +1,71 @@
+# Ansible generated template, do not edit!
+
+allow bootp;
+allow booting;
+max-lease-time 600;
+default-lease-time 300;
+log-facility local7;
+option ip-forwarding false;
+option mask-supplier false;
+option ntp-servers {{ networks.private.cidr | ipaddr('address') }}, {{ networks.management.cidr | ipaddr('address') }};
+
+# Private subnet declaration
+subnet {{ networks.private.cidr | ipaddr('network') }} netmask {{ networks.private.cidr | ipaddr('netmask') }} 
+{
+    option broadcast-address {{ networks.private.cidr | ipaddr('broadcast') }};
+    option routers {{ networks.private.cidr | ipaddr('address') }};
+    option domain-name "{{ domain_name }}";
+    option domain-name-servers {{ networks.private.cidr | ipaddr('address') }};
+}
+
+# Management subnet declaration
+subnet {{ networks.management.cidr | ipaddr('network') }} netmask {{ networks.management.cidr | ipaddr('netmask') }} 
+{
+    option broadcast-address {{ networks.management.cidr | ipaddr('broadcast') }};
+    option routers {{ networks.management.cidr | ipaddr('address') }};
+    option domain-name "{{ domain_name }}";
+    option domain-name-servers {{ networks.management.cidr | ipaddr('address') }};
+}
+
+{% for host in groups["cpu_nodes"] %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "private")) %}
+
+host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
+    hardware ethernet {{ intf.mac }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 99) }};
+    filename "/pxelinux.0";
+}
+
+{% endfor %}
+{% endfor %}
+{% for host in groups["cpu_nodes"] %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "management")) %}
+
+host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
+    hardware ethernet {{ intf.mac }};
+    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 99) }};
+}
+
+{% endfor %}
+{% endfor %}
+{% for host in groups["gpu_nodes"] %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "private")) %}
+
+host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
+    hardware ethernet {{ intf.mac }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(host) + 199) }};
+    filename "/pxelinux.0";
+}
+
+{% endfor %}
+{% endfor %}
+{% for host in groups["gpu_nodes"] %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "management")) %}
+
+host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
+    hardware ethernet {{ intf.mac }};
+    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(host) + 199) }};
+}
+
+{% endfor %}
+{% endfor %}
