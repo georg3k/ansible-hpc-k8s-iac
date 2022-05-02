@@ -1,0 +1,58 @@
+# Ansible generated file, do not edit!
+#version=RHEL8
+# Use graphical install
+graphical
+
+repo --name="AppStream" --baseurl=file:///run/install/repo/AppStream
+
+%packages
+@^server-product-environment
+kexec-tools
+
+%end
+
+# Keyboard layouts
+keyboard --xlayouts='us', 'ru'
+# System language
+lang en_US.UTF-8
+
+# Network information
+network  --bootproto=dhcp --device=enp5s0 --onboot=off --ipv6=auto --activate
+network  --bootproto=dhcp --device=enp6s0 --onboot=off --ipv6=auto
+network  --bootproto=dhcp --device=ib0 --onboot=off --ipv6=auto
+network  --hostname=localhost.localdomain
+
+# Use NFS installation media
+nfs --server={{ control_aliases.nfs }}.{{ domain_name }} --dir=/var/pxe/mnt
+
+# Run the Setup Agent on first boot
+firstboot --disable
+
+ignoredisk --only-use=sda
+# Partition clearing information
+clearpart --all
+
+# Custom partitioning
+zerombr
+part /boot --ondisk=sda --fstype ext4 --size=1024 --asprimary
+part /     --ondisk=sda --fstype ext4 --size=1 --grow
+
+# System timezone
+timezone Europe/Moscow --isUtc
+
+# Root password
+rootpw --iscrypted {{ root_passwd | string | password_hash('sha512') }}
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
+
+%anaconda
+pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+%end
+
+eula --agreed
+
+reboot

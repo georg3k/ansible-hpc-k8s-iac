@@ -1,0 +1,144 @@
+---
+
+- name: Install tFTP
+  dnf:
+    name: tftp-server
+    state: latest
+  
+- name: Create ISO images directory
+  file:
+    path: '/var/pxe/images'
+    state: directory
+  
+- name: Create mount point directory
+  file:
+    path: '/var/pxe/mnt'
+    state: directory
+  
+- name: Create tFTP directory
+  file:
+    path: '/var/pxe/tftp'
+    state: directory
+  
+- name: Create pxelinux.cfg directory
+  file:
+    path: '/var/pxe/tftp/pxelinux.cfg'
+    state: directory
+  
+- name: Create PXE boot directory
+  file:
+    path: '/var/pxe/tftp/pxelinux.cfg'
+    state: directory
+  
+- name: Create kickstart directory
+  file:
+    path: '/var/pxe/kickstart'
+    state: directory
+  
+- name: Download CentOS installation image
+  get_url:
+    url: "{{ distro_url }}"
+    dest: '{{ "/var/pxe/images/" + (distro_url | basename) }}'
+    checksum: '{{ "sha256:" + distro_chk }}'
+    force: no
+  notify: Reset PXE data
+  
+#- meta: flush_handlers
+
+- name: Mount CentOS installation image
+  ansible.posix.mount:
+    src: '{{ "/var/pxe/images/" + (distro_url | basename) }}'
+    path: '/var/pxe/mnt'
+    state: mounted
+    fstype: iso9660
+  
+- name: Extract syslinux/ldlinux.c32
+  shell: |
+    find /var/pxe/mnt/BaseOS/Packages -name syslinux-tftpboot-* | xargs rpm2cpio | cpio -imD /tmp
+    cp /tmp/tftpboot/ldlinux.c32 /var/pxe/tftp
+  args:
+    creates: '/var/pxe/tftp/ldlinux.c32'
+  
+- name: Extract syslinux/pxelinux.0
+  shell: |
+    find /var/pxe/tftp/BaseOS/Packages -name syslinux-tftpboot-* | xargs rpm2cpio | cpio -imD /tmp
+    cp /tmp/tftpboot/pxelinux.0 /var/pxe/tftp
+  args:
+    creates: '/var/pxe/tftp/pxelinux.0'
+  
+- name: Copy initrd.img
+  copy:
+    src: '/var/pxe/mnt/isolinux/initrd.img'
+    dest: '/var/pxe/tftp'
+    mode: "644"
+  
+- name: Copy vmlinuz
+  copy:
+    src: '/var/pxe/mnt/isolinux/vmlinuz'
+    dest: '/var/pxe/tftp'
+    mode: "644"
+  
+- name: Generate kickstart.cfg template
+  template:
+    src: kickstart.cfg.j2
+    dest: '/var/pxe/kickstart/kickstart.cfg'
+  
+- name: Generate PXE boot config file template
+  template:
+    src: default.j2
+    dest: '/var/pxe/tftp/pxelinux.cfg/default'
+  
+- name: Copy boot menu file
+  copy:
+    src: boot.msg
+    dest: '/var/pxe/tftp/boot.msg'
+  
+- name: Add NFS exports
+  lineinfile:
+    path: /etc/exports
+    regexp: "^{{ item }}.*"
+    line: "{{ item  }}\t{{ networks.private.cidr }}(ro,sync,no_root_squash)"
+  notify: Update NFS exports
+  with_items:
+  - '/var/pxe/kickstart'
+  - '/var/pxe/mnt'
+  
+- name: Setting tFTP directory in tftp configuration file
+  lineinfile:
+    path: '/usr/lib/systemd/system/tftp.service'
+    regexp: "^ExecStart"
+    line: 'ExecStart=/usr/sbin/in.tftpd -s /var/pxe/tftp'
+  notify:
+  - Reload systemd daemon
+  - Restart tFTP
+  
+- name: Allow tFTP traffic
+  ansible.posix.firewalld:
+    service: tftp
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  
+- name: Allow rpc-bind traffic
+  ansible.posix.firewalld:
+    service: rpc-bind
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  
+- name: Allow mountd traffic
+  ansible.posix.firewalld:
+    service: mountd
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  
+- name: Start and enable tFTP
+  service:
+    name: tftp
+    state: started
+    enabled: true
+  

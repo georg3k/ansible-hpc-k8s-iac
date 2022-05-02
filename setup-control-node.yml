@@ -8,3 +8,4 @@
   - chrony       # Time sync service
   - dns          # BIND9 DNS service
   - dhcp         # DHCP service
+  - pxe          # PXE netboot distro provisioning (tFTP + NFS)

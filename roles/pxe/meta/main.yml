@@ -1,0 +1,5 @@
+---
+
+dependencies:
+    - role: nas
+    - role: dhcp

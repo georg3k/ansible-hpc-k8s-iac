@@ -1,0 +1,44 @@
+---
+
+- name: Update NFS exports
+  shell: exportfs -r
+  
+- name: Restart tFTP
+  service:
+    name: tftp
+    state: restarted
+  
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  
+- name: Reload firewalld
+  shell: 'firewall-cmd --reload'
+  
+- name: Reset PXE data
+  block:
+    - name: Remove ldlinux.c32
+      file:
+        path: /var/pxe/tftp/ldlinux.c32'
+        state: absent
+
+    - name: Remove pxelinux.0
+      file:
+        path: /var/pxe/tftp/pxelinux.0'
+        state: absent
+
+    - name: Remove initrd.img
+      file:
+        path: /var/pxe/tftp/initrd.img'
+        state: absent
+
+    - name: Remove vmlinuz
+      file:
+        path: /var/pxe/tftp/vmlinuz'
+        state: absent
+        
+    - name: Unmount old CentOS installation image
+      ansible.posix.mount:
+        path: "/var/pxe/mnt"
+        state: absent
+  
