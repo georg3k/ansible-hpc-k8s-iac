@@ -1,0 +1,8 @@
+---
+
+- name: Update NFS exports
+  shell: exportfs -r
+  
+- name: Reload firewalld
+  shell: "firewall-cmd --reload"
+  

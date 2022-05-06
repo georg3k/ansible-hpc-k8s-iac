@@ -1,0 +1,55 @@
+---
+
+- name: Install NFS
+  dnf:
+    name: nfs-utils
+    state: latest
+  
+- name: Create iSCSI mount directory
+  file:
+    path: /export
+    state: directory
+  when: inventory_hostname in groups.control_nodes
+  
+# TODO: Mount iSCSI drive to /iscsi
+  
+- name: Ensure existance of home directory
+  file:
+    path: /export/home
+    state: directory
+  when: inventory_hostname in groups.control_nodes
+
+- name: Add NFS exports
+  lineinfile:
+    path: /etc/exports
+    regexp: "^/export/home.*"
+    line: "/export/home\t{{ networks.private.cidr }}(rw,sync,no_root_squash)"
+  when: inventory_hostname in groups.control_nodes
+  notify: Update NFS exports
+  
+- name: Allow NFS traffic
+  ansible.posix.firewalld:
+    service: nfs3
+    zone: private
+    permanent: yes
+    state: enabled
+  when: inventory_hostname in groups.control_nodes
+  notify: Reload firewalld
+  
+- name: Start and enable NFS service
+  service:
+    name: nfs-server
+    state: started
+    enabled: true
+  when: inventory_hostname in groups.control_nodes
+  
+- name: Mount NFS share
+  ansible.posix.mount:
+    path: /home
+    src: "{{ control_aliases.nfs }}.{{ domain_name }}:/export/home"
+    opts: rw,sync,hard
+    fstype: nfs
+    boot: yes
+    state: mounted
+   
+  
