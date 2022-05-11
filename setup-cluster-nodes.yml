@@ -8,6 +8,7 @@
   - network
   - chrony
   - nas
+  - docker
 
 - name: Compute cluster setup 
   hosts: gpu_nodes
@@ -17,3 +18,5 @@
   - network
   - chrony
   - nas
+  - docker
+  - auth

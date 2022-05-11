@@ -1,0 +1,86 @@
+---
+
+- name: Add Docker repo
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: 0644
+  
+- name: Remove podman and builah
+  dnf:
+    name: ['podman', 'buildah']
+    state: absent
+  
+- name: Install Docker
+  dnf:
+    name: ['docker-ce', 'docker-ce-cli', 'containerd.io']
+    state: latest
+  
+- name: Create Docker directory on NAS
+  file:
+    path: /export/docker
+    state: directory
+  
+- name: Create Docker NFS bind directory
+  file:
+    path: /docker
+    state: directory
+  
+#- name: Install docker-compose
+#  get_url: 
+#    url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+#    dest: /usr/local/bin/docker-compose
+#    mode: 'u+x,g+x'
+#  
+- name: Bring up Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  
+- name: Create Docker Swarm cluster
+  community.docker.docker_swarm:
+    state: present
+    advertise_addr: '{{ networks.private.cidr | ipaddr("address") }}'
+    election_tick: 30
+  when: inventory_hostname in groups.control_nodes
+  
+- name: Save Docker Swarm join-token
+  shell: docker swarm join-token --quiet worker
+  register: worker_token
+  when: inventory_hostname in groups.control_nodes
+  changed_when: false
+  
+- name: Add nodes to Docker Swarm cluster
+  community.docker.docker_swarm:
+    state: join
+    advertise_addr: '{{ networks.private.cidr | ipaddr("address") }}'
+    join_token: '{{ worker_token.stdout }}'
+    remote_addrs: '{{ hostvars[item].inventory_hostname }}.private.cluster.{{ domain_name }}'
+  when: inventory_hostname in groups.control_nodes
+  with_items: '{{ groups["cpu_nodes"] }}'
+  
+- name: Add NFS exports
+  lineinfile:
+    path: /etc/exports
+    regexp: "^/export/docker.*"
+    line: "/export/docker\t{{ networks.private.cidr }}(rw,sync,no_root_squash)"
+  when: inventory_hostname in groups.control_nodes
+  notify: Update NFS exports
+
+- name: Sync handlers
+  meta: flush_handlers
+
+- name: Wait for NFS mount
+  wait_for:
+    timeout: 3
+    state: present
+  
+- name: Mount NFS share
+  ansible.posix.mount:
+    path: /docker
+    src: "{{ control_aliases.nfs }}.{{ domain_name }}:/export/docker"
+    opts: rw,sync,hard
+    fstype: nfs
+    boot: yes
+    state: mounted

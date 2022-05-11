@@ -1,0 +1,5 @@
+---
+
+- name: Update NFS exports
+  shell: exportfs -r
+  
