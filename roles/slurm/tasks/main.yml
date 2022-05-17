@@ -1,0 +1,101 @@
+---
+
+- name: Install EPEL
+  dnf:
+    name: ['epel-release', 'epel-next-release']
+    state: latest
+
+- name: Enable powertools
+  community.general.ini_file:
+      path: /etc/yum.repos.d/CentOS-Stream-PowerTools.repo
+      section: powertools
+      option: enabled
+      value: "1"
+      mode: "0644"
+
+- name: Install munge
+  dnf:
+    name: munge
+    state: latest
+
+- name: Generate munge key
+  shell: /usr/sbin/create-munge-key
+  args:
+    creates: /etc/munge/munge.key
+
+- name: Distrubte munge key
+  synchronize:
+    src: /etc/munge/munge.key
+    dest: /etc/munge/munge.key
+  delegate_to: control-node
+  when: inventory_hostname in groups.gpu_nodes
+
+- name: Install slurm control node suite
+  dnf:
+    name: ['slurm-slurmctld', 'slurm-slurmdbd', 'slurm-slurmrestd']
+    state: latest
+  when: inventory_hostname in groups.control_nodes
+
+- name: Install slurm cluster node suite
+  dnf:
+    name: 'slurm-slurmd'
+    state: latest
+  when: inventory_hostname in groups.gpu_nodes
+
+- name: Generate slurm.conf template
+  template:
+    src: slurm.conf.j2
+    dest: /etc/slurm/slurm.conf
+  notify: Restart slurm
+
+- name: Allow slurmctld traffic on control node
+  ansible.posix.firewalld:
+    port: 6817/tcp
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  when: inventory_hostname in groups.control_nodes
+
+- name: Start and enable munge
+  service:
+    name: munge
+    state: started
+    enabled: yes
+  when: inventory_hostname in groups.control_nodes
+
+- name: Start and enable slurm services on control node
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - slurmctld
+    - slurmdbd
+    - slurmrestd
+  when: inventory_hostname in groups.control_nodes
+
+- name: Start and enable slurm on cluster node
+  service:
+    name: slurmd
+    state: started
+    enabled: yes
+  when: inventory_hostname in groups.gpu_nodes
+
+- name: Allow slurmd traffic on compute nodes
+  ansible.posix.firewalld:
+    port: 6818/tcp
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  when: inventory_hostname in groups.gpu_nodes
+
+- name: Undrain and enable compute nodes
+  shell: |
+    scontrol update NodeName={{ item }} State=DOWN Reason="undraining"
+    scontrol update NodeName={{ item }} State=RESUME
+  changed_when: false
+  with_items: '{{ groups.gpu_nodes }}'
+  when: inventory_hostname in groups.control_nodes
+           

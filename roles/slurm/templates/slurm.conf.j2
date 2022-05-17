@@ -1,0 +1,35 @@
+ClusterName={{ domain_name }}
+SlurmctldHost=control-node
+MpiDefault=none
+ProctrackType=proctrack/cgroup
+ReturnToService=1
+SlurmctldPidFile=/var/run/slurmctld.pid
+SlurmctldPort=6817
+SlurmdPidFile=/var/run/slurmd.pid
+SlurmdPort=6818
+SlurmdSpoolDir=/var/spool/slurmd
+SlurmUser=root
+StateSaveLocation=/var/spool/slurmctld
+SwitchType=switch/none
+TaskPlugin=task/affinity
+InactiveLimit=0
+KillWait=30
+MinJobAge=300
+SlurmctldTimeout=120
+SlurmdTimeout=300
+Waittime=0
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+SelectTypeParameters=CR_Core
+AccountingStorageType=accounting_storage/none
+JobCompType=jobcomp/none
+JobAcctGatherFrequency=30
+JobAcctGatherType=jobacct_gather/none
+SlurmctldDebug=info
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdDebug=info
+SlurmdLogFile=/var/log/slurm/slurmd.log
+{% for node in groups.gpu_nodes %}
+NodeName={{ hostvars[node].inventory_hostname }} CPUs={{ hostvars[node].properties.cpus }} RealMemory={{ hostvars[node].properties.memory }} Sockets={{ hostvars[node].properties.sockets }} CoresPerSocket={{ hostvars[node].properties.cps }} ThreadsPerCore={{ hostvars[node].properties.tpc }} State=UNKNOWN
+{% endfor %}
+PartitionName=cpu-nodes Nodes=ALL Default=YES MaxTime=INFINITE State=UP

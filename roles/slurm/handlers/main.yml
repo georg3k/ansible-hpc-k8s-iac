@@ -1,0 +1,16 @@
+---
+
+- name: Restart slurm
+  service:
+    name: slurmctld
+    state: restarted
+  when: inventory_hostname in groups.control_nodes
+
+- name: Restart slurm
+  service:
+    name: slurmd
+    state: restarted
+  when: inventory_hostname not in groups.control_nodes
+
+- name: Reload firewalld
+  shell: 'firewall-cmd --reload'

@@ -10,3 +10,5 @@
   - dhcp         # DHCP service
   - pxe          # PXE netboot distro provisioning (tFTP + NFS)
   - nas          # iSCSI, NFS and fstab configuration
+  - docker       # Docker, docker-compose and Docker Swarm setup
+  - slurm        # Slurm scheduler configuration
