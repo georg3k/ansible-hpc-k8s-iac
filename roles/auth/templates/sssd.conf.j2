@@ -1,0 +1,28 @@
+[sssd]
+services = nss,pam,autofs,ssh
+config_file_version = 2
+domains = default
+
+[nss]
+homedir_substring = /home
+
+[pam]
+offline_credentials_expiration = 60
+
+[ssh]
+
+[domain/default]
+cache_credentials = True
+ldap_search_base = {{ domain_ldap }}
+id_provider = ldap
+auth_provider = ldap
+chpass_provider = ldap
+access_provider = ldap
+ldap_uri = ldaps://{{ control_aliases.ldap }}.{{ domain_name }}
+ldap_default_bind_dn = cn=admin,dc=example,dc=com
+ldap_default_authtok = {{ admin_password }}
+ldap_search_timeout = 50
+ldap_network_timeout = 60
+ldap_access_order = filter
+ldap_access_filter = (objectClass=posixAccount)
+ldap_tls_reqcert = allow

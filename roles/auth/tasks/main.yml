@@ -1,0 +1,237 @@
+---
+
+- name: Create LDAP bind directory
+  file:
+    path: /docker/ldap
+    state: directory
+    mode: 0775
+    owner: '33'
+    group: root
+  when: inventory_hostname in groups.control_nodes
+  
+- name: Generate config.cfg template
+  template:
+    src: config.cfg.j2
+    dest: /docker/ldap/config.cfg
+    mode: 0664
+    owner: '33'
+    group: '33'
+  when: inventory_hostname in groups.control_nodes
+  
+- name: Generate openldap.conf template
+  template:
+    src: openldap.conf.j2
+    dest: /docker/ldap/openldap.conf
+    owner: '33'
+    group: root
+    mode: 0664
+  when: inventory_hostname in groups.control_nodes
+  
+- name: Copy LAM language config
+  copy:
+    src: language
+    dest: /docker/ldap/language
+    mode: 0664
+    owner: '33'
+    group: root
+  when: inventory_hostname in groups.control_nodes
+    
+- name: Deploy OpenLDAP and LAM containers
+  community.docker.docker_compose:
+    project_name: 'ldap'
+    definition:
+      version: '3'
+      services:
+        openldap:
+          image: osixia/openldap:1.2.4
+          container_name: openldap
+          environment:
+            LDAP_LOG_LEVEL: "256"
+            LDAP_ORGANISATION: "ANSIBLE HPC ORG"
+            LDAP_DOMAIN: '{{ domain_name }}'
+            LDAP_BASE_DN: ""
+            LDAP_READONLY_USER: "true"
+            LDAP_ADMIN_PASSWORD: '{{ admin_password }}'
+            LDAP_CONFIG_PASSWORD: '{{ admin_password }}'
+            LDAP_READONLY_USER_PASSWORD: '{{ readonly_password }}'
+            LDAP_BACKEND: "mdb"
+            KEEP_EXISTING_CONFIG: "false"
+            LDAP_TLS: "true"
+            LDAP_TLS_ENFORCE: "true"
+            LDAP_TLS_VERIFY_CLIENT: "never"
+            LDAP_TLS_CRT_FILENAME: "serverCerts.pem"
+          tty: true
+          stdin_open: true
+          volumes:
+            - /docker/ldap/data:/var/lib/ldap
+            - /docker/ldap/slapd.d:/etc/ldap/slapd.d
+            - /docker/ldap:/container/service/slapd/assets/certs
+          ports:
+            - "636:636"
+          restart: always
+          hostname: '{{ control_aliases.ldap }}.{{ domain_name }}'
+        lam:
+          image: ldapaccountmanager/lam:stable
+          container_name: lam
+          environment:
+            LAM_SKIP_PRECONFIGURE: 'true'
+          volumes:
+            - /docker/ldap:/var/lib/ldap-account-manager/config
+          ports:
+            - "4000:80"
+          restart: always
+          depends_on:
+            - openldap
+  when: inventory_hostname in groups.control_nodes
+  
+- name: Allow LDAP traffic
+  ansible.posix.firewalld:
+    service: ldaps
+    zone: '{{ item }}'
+    permanent: yes
+    state: enabled
+  with_items:
+    - private
+    - management
+  notify: Reload firewalld
+  when: inventory_hostname in groups.control_nodes
+
+- name: Allow SSH traffic on public interface of control node
+  ansible.posix.firewalld:
+    service: ssh
+    zone: public
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  when: inventory_hostname in groups.control_nodes
+
+- name: Allow SSH traffic
+  ansible.posix.firewalld:
+    service: ssh
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  
+- name: Install OpenLDAP client
+  dnf:
+    name: ['openldap', 'openldap-clients', 'sssd', 'sssd-ldap']
+    state: latest
+  
+- name: Generate sssd.conf template
+  template:
+    src: sssd.conf.j2
+    dest: /etc/sssd/sssd.conf
+    mode: 0600
+  notify:
+    - Restart SSSD
+    - Run authselect
+  
+- name: Generate ldap.conf template
+  template:
+    src: ldap.conf.j2
+    dest: /etc/openldap/ldap.conf
+  notify:
+    - Restart SSSD
+  
+- name: Add admins to sudoers
+  lineinfile:
+    path: /etc/sudoers
+    regexp: '^%admins.*'
+    line: '%admins ALL=(ALL) ALL'
+  
+- name: Bring up SSSD service
+  service:
+    name: sssd
+    state: started
+    enabled: yes
+  
+- name: Install oddjob for automatic homedir creation
+  dnf:
+    name: ['oddjob-mkhomedir']
+    state: latest
+  when: inventory_hostname in groups.control_nodes
+  
+- name: Bring up oddjob service
+  service:
+    name: oddjobd
+    state: started
+    enabled: yes
+  when: inventory_hostname in groups.control_nodes
+
+- name: Copy SSH client configuration
+  copy:
+    src: ssh_config
+    dest: /etc/ssh/ssh_config
+    mode: 0644
+  notify: Restart SSH
+
+- name: Copy SSH server configuration
+  copy:
+    src: sshd_config
+    dest: /etc/ssh/sshd_config
+    mode: 0644
+  notify: Restart SSH
+
+- name: Remove default welcome message
+  file:
+    path: /etc/motd.d
+    state: absent
+
+- name: Copy control node welcome message
+  copy:
+    src: welcome.sh.control
+    dest: /etc/profile.d/welcome.sh
+    mode: 0744
+  when: inventory_hostname in groups.control_nodes
+
+- name: Copy cluster nodes welcome message
+  copy:
+    src: welcome.sh.cluster
+    dest: /etc/profile.d/welcome.sh
+    mode: 0744
+  when: inventory_hostname not in groups.control_nodes
+  
+- name: Add hosts to shosts.equiv
+  template:
+    src: shosts.equiv.j2
+    dest: /etc/ssh/shosts.equiv
+    mode: 0664
+  notify: Restart SSH
+
+- name: Copy shosts.equiv to root homedir .shosts for root auth
+  copy:
+    src: /etc/ssh/shosts.equiv
+    dest: /root/.shosts
+    mode: 0644
+  
+- name: Set SELinux rule for home dirs
+  ansible.posix.seboolean:
+    name: use_nfs_home_dirs
+    state: yes
+    persistent: yes
+  
+- name: Add hosts to ssh_known_hosts
+  lineinfile:
+    dest: /etc/ssh/ssh_known_hosts
+    create: yes
+    state: present
+    line: "{{ lookup('pipe', 'ssh-keyscan -trsa ' + hostvars[item].inventory_hostname + '.' + domain_name) }}"
+  failed_when: False
+  ignore_errors: True
+  with_items:
+    - '{{ groups["control_nodes"] + groups["cpu_nodes"] + groups["gpu_nodes"] }}'
+  notify: Restart SSH
+  
+#- name: Add hosts to ssh_known_hosts (short name)
+#  lineinfile:
+#    dest: /etc/ssh/ssh_known_hosts
+#    create: yes
+#    state: present
+#    line: "{{ lookup('pipe', 'ssh-keyscan -trsa ' + hostvars[item].inventory_hostname) }}"
+#  failed_when: False
+#  ignore_errors: True
+#  with_items:
+#    - '{{ groups["control_nodes"] + groups["cpu_nodes"] + groups["gpu_nodes"] }}'
+#  notify: Restart SSH
+      

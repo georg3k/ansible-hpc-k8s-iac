@@ -1,0 +1,213 @@
+
+ServerURL: ldaps://{{ control_aliases.ldap }}.{{ domain_name }}
+
+serverDisplayName: 
+
+useTLS: no
+
+followReferrals: false
+
+pagedResults: false
+
+referentialIntegrityOverlay: false
+
+hidePasswordPromptForExpiredPasswords: false
+
+Passwd: {CRYPT-SHA512}{{ admin_password | string | password_hash('sha512', inventory_hostname | hash('sha512') | truncate(16, True, '')) }} {{ inventory_hostname | hash('sha512') | truncate(16, True, '') | b64encode }}
+
+Admins: cn=admin,{{ domain_ldap }}
+
+defaultLanguage: en_US.utf8
+
+timeZone: Europe/Moscow
+
+scriptPath: 
+
+scriptServer: 
+
+scriptRights: 750
+
+scriptUserName: 
+
+scriptSSHKey: 
+
+scriptSSHKeyPassword: 
+
+searchLimit: 0
+
+activeTypes: user,group
+
+accessLevel: 100
+
+loginMethod: list
+
+loginSearchSuffix: {{ domain_ldap }}
+
+loginSearchFilter: uid=%USER%
+
+loginSearchDN: 
+
+loginSearchPassword: 
+
+httpAuthentication: false
+
+lamProMailFrom: 
+
+lamProMailReplyTo: 
+
+lamProMailSubject: Your password was reset
+
+lamProMailIsHTML: false
+
+lamProMailAllowAlternateAddress: true
+
+lamProMailText: Dear @@givenName@@ @@sn@@,+::++::+your password was reset to: @@newPassword@@+::++::++::+Best regards+::++::+deskside support+::+
+
+jobsBindPassword: 
+
+jobsBindUser: 
+
+jobsDatabase: SQLite
+
+jobsDBHost: 
+
+jobsDBPort: 
+
+jobsDBUser: 
+
+jobsDBPassword: 
+
+jobsDBName: 
+
+jobToken: 606363244274
+
+pwdResetAllowSpecificPassword: true
+
+pwdResetAllowScreenPassword: true
+
+pwdResetForcePasswordChange: true
+
+pwdResetDefaultPasswordOutput: 2
+
+twoFactorAuthentication: none
+
+twoFactorAuthenticationURL: https://localhost
+
+twoFactorAuthenticationClientId: 
+
+twoFactorAuthenticationSecretKey: 
+
+twoFactorAuthenticationDomain: 
+
+twoFactorAuthenticationInsecure: 
+
+twoFactorAuthenticationLabel: 
+
+twoFactorAuthenticationOptional: 
+
+twoFactorAuthenticationCaption: 
+
+twoFactorAuthenticationAttribute: uid
+
+hideDnPart: 
+modules: posixGroup_group_gidGenerator: range
+modules: posixGroup_group_minGID: 10000
+modules: posixGroup_group_maxGID: 30000
+modules: posixGroup_group_hidememberUid: false
+modules: posixAccount_user_uidGeneratorUsers: range
+modules: posixAccount_user_minUID: 10000
+modules: posixAccount_user_maxUID: 30000
+modules: posixAccount_user_userNameSuggestion: @givenname@%sn%
+modules: posixAccount_user_hidegecos: true
+modules: posixAccount_user_hidepassword: false
+modules: posixAccount_pwdHash: CRYPT-SHA512
+modules: posixAccount_shells: /bin/bash+::+/bin/csh+::+/bin/dash+::+/bin/false+::+/bin/ksh+::+/bin/sh
+modules: posixAccount_primaryGroupAsSecondary: false
+modules: inetOrgPerson_hideDescription: true
+modules: inetOrgPerson_hideStreet: true
+modules: inetOrgPerson_hidePostOfficeBox: true
+modules: inetOrgPerson_hidePostalCode: true
+modules: inetOrgPerson_hideLocation: true
+modules: inetOrgPerson_hideState: true
+modules: inetOrgPerson_hidePostalAddress: true
+modules: inetOrgPerson_hideRegisteredAddress: true
+modules: inetOrgPerson_hideOfficeName: true
+modules: inetOrgPerson_hideRoomNumber: true
+modules: inetOrgPerson_hideTelephoneNumber: true
+modules: inetOrgPerson_hideHomeTelephoneNumber: true
+modules: inetOrgPerson_hideMobileNumber: false
+modules: inetOrgPerson_hideFaxNumber: true
+modules: inetOrgPerson_hidePager: true
+modules: inetOrgPerson_hideEMailAddress: false
+modules: inetOrgPerson_hideJobTitle: false
+modules: inetOrgPerson_hideCarLicense: true
+modules: inetOrgPerson_hideEmployeeType: true
+modules: inetOrgPerson_hideBusinessCategory: true
+modules: inetOrgPerson_hideDepartments: true
+modules: inetOrgPerson_hideManager: true
+modules: inetOrgPerson_hideOu: true
+modules: inetOrgPerson_hideO: true
+modules: inetOrgPerson_hideEmployeeNumber: true
+modules: inetOrgPerson_hideInitials: false
+modules: inetOrgPerson_hideLabeledURI: false
+modules: inetOrgPerson_hideuserCertificate: true
+modules: inetOrgPerson_hidejpegPhoto: true
+modules: inetOrgPerson_hidedisplayName: true
+modules: inetOrgPerson_addAddressbook: false
+modules: inetOrgPerson_readOnly_mail: false
+modules: inetOrgPerson_readOnly_businessCategory: false
+modules: inetOrgPerson_readOnly_labeledURI: false
+modules: inetOrgPerson_readOnly_carLicense: false
+modules: inetOrgPerson_readOnly_title: false
+modules: inetOrgPerson_readOnly_homePhone: false
+modules: inetOrgPerson_readOnly_registeredAddress: false
+modules: inetOrgPerson_readOnly_givenName: false
+modules: inetOrgPerson_readOnly_physicalDeliveryOfficeName: false
+modules: inetOrgPerson_readOnly_uid: false
+modules: inetOrgPerson_readOnly_initials: false
+modules: inetOrgPerson_readOnly_manager: false
+modules: inetOrgPerson_readOnly_l: false
+modules: inetOrgPerson_readOnly_mobile: false
+modules: inetOrgPerson_readOnly_roomNumber: false
+modules: inetOrgPerson_readOnly_employeeNumber: false
+modules: inetOrgPerson_readOnly_facsimileTelephoneNumber: false
+modules: inetOrgPerson_readOnly_st: false
+modules: inetOrgPerson_readOnly_cn: false
+modules: inetOrgPerson_readOnly_description: false
+modules: inetOrgPerson_readOnly_ou: false
+modules: inetOrgPerson_readOnly_o: false
+modules: inetOrgPerson_readOnly_departmentNumber: false
+modules: inetOrgPerson_readOnly_userPassword: false
+modules: inetOrgPerson_readOnly_pager: false
+modules: inetOrgPerson_readOnly_postalAddress: false
+modules: inetOrgPerson_readOnly_postalCode: false
+modules: inetOrgPerson_readOnly_postOfficeBox: false
+modules: inetOrgPerson_readOnly_telephoneNumber: false
+modules: inetOrgPerson_readOnly_employeeType: false
+modules: inetOrgPerson_readOnly_street: false
+modules: inetOrgPerson_readOnly_sn: false
+modules: inetOrgPerson_readOnly_jpegPhoto: false
+types: suffix_user: ou=People,dc=example,dc=com
+types: attr_user: #uid;#givenName;#sn;#uidNumber;#gidNumber
+types: modules_user: inetOrgPerson,posixAccount,shadowAccount,ldapPublicKey,freeRadius
+types: suffix_group: ou=group,dc=example,dc=com
+types: attr_group: #cn;#gidNumber;#memberUID;#description
+types: modules_group: posixGroup
+types: customLabel_user: 
+types: filter_user: 
+types: customLabel_group: 
+types: filter_group: 
+types: hidden_user: 
+types: hidden_group: 
+tools: treeViewSuffix: dc=example,dc=com
+tools: tool_hide_toolSchemaBrowser: false
+tools: tool_hide_toolFileUpload: false
+tools: tool_hide_toolProfileEditor: false
+tools: tool_hide_toolMultiEdit: false
+tools: tool_hide_toolServerInformation: false
+tools: tool_hide_toolTests: false
+tools: tool_hide_TreeViewTool: false
+tools: tool_hide_ImportExport: false
+tools: tool_hide_toolOUEditor: false
+tools: tool_hide_toolWebauthn: false
+tools: tool_hide_toolPDFEditor: false

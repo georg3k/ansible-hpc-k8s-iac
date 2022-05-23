@@ -1,0 +1,12 @@
+# Ansible generated file, do not edit!
+
+Host *
+    EnableSSHKeySign yes
+    HostbasedAuthentication yes
+    UserKnownHostsFile no
+    StrictHostKeyChecking no
+    NoHostAuthenticationForLocalhost yes
+    HostbasedKeyTypes ssh-rsa
+    CheckHostIP no
+
+Include /etc/ssh/ssh_config.d/*.conf

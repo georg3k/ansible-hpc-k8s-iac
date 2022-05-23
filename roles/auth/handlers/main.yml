@@ -1,0 +1,17 @@
+---
+
+- name: Restart SSSD
+  service:
+    name: sssd
+    state: restarted
+  
+- name: Restart SSH
+  service:
+    name: sshd
+    state: restarted
+  
+- name: Run authselect
+  shell: authselect select sssd with-mkhomedir --force
+  
+- name: Reload firewalld
+  shell: 'firewall-cmd --reload'

@@ -12,3 +12,4 @@
   - nas          # iSCSI, NFS and fstab configuration
   - docker       # Docker, docker-compose and Docker Swarm setup
   - slurm        # Slurm scheduler configuration
+  - auth         # OpenLDAP, LAM, PAM and SSH configuration

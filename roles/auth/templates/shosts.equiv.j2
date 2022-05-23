@@ -1,0 +1,4 @@
+{{ control_aliases.main }}.{{ domain_name }}
+{% for host in (groups["cpu_nodes"] + groups["gpu_nodes"]) %}
+{{ hostvars[host].inventory_hostname }}.{{ domain_name }}
+{% endfor %}
