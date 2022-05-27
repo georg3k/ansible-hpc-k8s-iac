@@ -1,0 +1,25 @@
+---
+
+- name: Deploy Docker registry
+  community.docker.docker_compose:
+    project_name: 'registry'
+    definition:
+      version: '3'
+      services:
+        registry:
+          container_name: registry
+          image: registry:2
+          ports:
+          - '5000:5000'
+          restart: always
+  when: inventory_hostname in groups.control_nodes
+
+- name: Allow registry traffic
+  ansible.posix.firewalld:
+    port: 5000/tcp
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  when: inventory_hostname in groups.control_nodes
+
