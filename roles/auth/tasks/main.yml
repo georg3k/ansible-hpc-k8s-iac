@@ -47,7 +47,7 @@
           container_name: openldap
           environment:
             LDAP_LOG_LEVEL: "256"
-            LDAP_ORGANISATION: "ANSIBLE HPC ORG"
+            LDAP_ORGANISATION: "SMCM SIMPLEX BMSTU"
             LDAP_DOMAIN: '{{ domain_name }}'
             LDAP_BASE_DN: ""
             LDAP_READONLY_USER: "true"
@@ -66,6 +66,7 @@
             - /docker/ldap/data:/var/lib/ldap
             - /docker/ldap/slapd.d:/etc/ldap/slapd.d
             - /docker/ldap:/container/service/slapd/assets/certs
+            - /etc/localtime:/etc/localtime:ro
           ports:
             - "636:636"
           restart: always
@@ -77,6 +78,7 @@
             LAM_SKIP_PRECONFIGURE: 'true'
           volumes:
             - /docker/ldap:/var/lib/ldap-account-manager/config
+            - /etc/localtime:/etc/localtime:ro
           ports:
             - "4000:80"
           restart: always
@@ -223,15 +225,9 @@
     - '{{ groups["control_nodes"] + groups["cpu_nodes"] + groups["gpu_nodes"] }}'
   notify: Restart SSH
   
-#- name: Add hosts to ssh_known_hosts (short name)
-#  lineinfile:
-#    dest: /etc/ssh/ssh_known_hosts
-#    create: yes
-#    state: present
-#    line: "{{ lookup('pipe', 'ssh-keyscan -trsa ' + hostvars[item].inventory_hostname) }}"
-#  failed_when: False
-#  ignore_errors: True
-#  with_items:
-#    - '{{ groups["control_nodes"] + groups["cpu_nodes"] + groups["gpu_nodes"] }}'
-#  notify: Restart SSH
-      
+- name: Generate NGINX reverse proxy template
+  template:
+    src: lam.conf.j2
+    dest: /docker/nginx/sites-enabled/lam.conf
+    mode: 0600
+  when: inventory_hostname in groups.control_nodes
