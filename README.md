@@ -148,6 +148,17 @@ Enables PXE boot within cluster network:
     * Downloads, verifies and extracts CentOS installer image
     * Generates kickstart installation script
     * Manages NFS directory for installation image
+* NGINX \
+Reverse proxy server and SSL termination point:
+    * Reverse proxy
+    * SSL certs from LetsEncrypt
+    * Automatic certs updates using Certbot
+* Gitlab\
+Gitlab git and CI/CD server:
+    * Installs Gitlab EE
+    * Sets up LDAP login and accounts management
+    * Installs special script that implements some of paid Gitlab EE features regarding LDAP synchronization, admin management, etc.\
+      Script project: [https://github.com/georg3k/gitlab-ldap-sync](https://github.com/georg3k/gitlab-ldap-sync)
 
 ### Roles structure
 

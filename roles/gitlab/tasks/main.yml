@@ -1,0 +1,104 @@
+---
+
+- name: Deploy Gitlab
+  community.docker.docker_compose:
+    project_name: 'gitlab'
+    definition:
+      version: '3'
+      services:
+        web:
+          image: 'gitlab/gitlab-ee:latest'
+          restart: always
+          hostname: '{{ external_subdomains.gitlab }}.{{ domain_name }}'
+          container_name: gitlab
+          environment:
+            GITLAB_OMNIBUS_CONFIG: |
+              external_url 'http://{{ external_subdomains.gitlab }}.{{ domain_name }}'
+              nginx['listen_https'] = false
+              nginx['listen_port'] = 80
+              nginx['redirect_http_to_https'] = false
+              letsencrypt['enable'] = false
+              gitlab_rails['initial_root_password'] = '{{ admin_password }}'
+              gitlab_rails['gitlab_shell_ssh_port'] = 5001
+              gitlab_rails['ldap_enabled'] = true
+              gitlab_rails['ldap_servers'] = {
+                'main' => {
+                  'label' => 'LDAP',
+                  'host' =>  '{{ control_aliases.ldap }}.{{ domain_name }}',
+                  'port' => 636,
+                  'uid' => 'uid',
+                  'encryption' => 'simple_tls',
+                  'verify_certificates' => false,
+                  'active_directory' => false,
+                  'bind_dn' => 'cn=readonly,{{ domain_ldap }}',
+                  'password' => '{{ readonly_password }}',
+                  'base' => '{{ domain_ldap }}',
+                  'allow_username_or_email_login' => false,
+                  'attributes' => {
+                    'username' => ['uid'],
+                    'email' => ['mail'],
+                    'name' => 'cn',
+                    'first_name' => 'givenName',
+                    'last_name' => 'sn'
+                  }
+                }
+              }
+          ports:
+            - '4001:80'
+            - '5001:22'
+          volumes:
+            - '/docker/gitlab/config:/etc/gitlab'
+            - '/docker/gitlab/logs:/var/log/gitlab'
+            - '/docker/gitlab/data:/var/opt/gitlab'
+
+- name: Generate NGINX reverse proxy template
+  template:
+    src: gitlab.conf.j2
+    dest: /docker/nginx/sites-enabled/gitlab.conf
+    mode: 0600
+
+- name: Wait for Gitlab to startup
+  local_action:
+    module: uri
+    url: "http://{{ external_subdomains.gitlab }}.{{ domain_name }}" #TODO
+    follow_redirects: all
+    method: GET
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 10
+
+- name: Generate random Gitlab API token
+  set_fact:
+    token: "{{ lookup('community.general.random_string', length=20, base64=True) }}"
+
+- name: Set Gitlab API key and disable signup
+  shell: |
+    docker exec gitlab gitlab-rails runner '
+    ApplicationSetting.last.update(signup_enabled: false)
+    User.find_by_username("root").personal_access_tokens.all.each { |t| if t.name == "LDAP sync token" then t.revoke! end }
+    token = User.find_by_username("root").personal_access_tokens.create(scopes: [:api, :sudo], name: "LDAP sync token")
+    token.set_token("{{ token }}")
+    token.save!'
+  failed_when: false
+  changed_when: false
+
+- name: Copy Gitlab LDAP sync script
+  copy:
+    src: gitlab-ldap-sync.py
+    dest: /root/gitlab-ldap-sync.py
+    mode: 700
+
+- name: Generate Gitlab LDAP sync config file
+  template:
+    src: gitlab-ldap-sync.json.j2
+    dest: /root/gitlab-ldap-sync.json
+    mode: 400
+
+- name: Enable sync script to run every minute
+  cron:
+    name: "Sync Gitlab with LDAP"
+    minute: '*/1'
+    user: root
+    job: "/root/gitlab-ldap-sync.py"
+    cron_file: gitlab_ldap
