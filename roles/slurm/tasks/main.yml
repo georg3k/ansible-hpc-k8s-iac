@@ -22,6 +22,7 @@
   shell: /usr/sbin/create-munge-key
   args:
     creates: /etc/munge/munge.key
+  notify: Restart slurm
 
 - name: Distrubte munge key
   synchronize:
@@ -29,10 +30,11 @@
     dest: /etc/munge/munge.key
   delegate_to: control-node
   when: inventory_hostname in groups.gpu_nodes
+  notify: Restart slurm
 
 - name: Install slurm control node suite
   dnf:
-    name: ['slurm-slurmctld', 'slurm-slurmdbd', 'slurm-slurmrestd']
+    name: ['mailx', 'slurm-slurmctld', 'slurm-slurmdbd', 'slurm-slurmrestd']
     state: latest
   when: inventory_hostname in groups.control_nodes
 
@@ -91,11 +93,27 @@
   notify: Reload firewalld
   when: inventory_hostname in groups.gpu_nodes
 
+- name: Allow slurmstepd traffic
+  ansible.posix.firewalld:
+    port: 50001-53000/tcp
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+
+- name: Allow MPI traffic
+  ansible.posix.firewalld:
+    port: 60001-63000/tcp
+    zone: private
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+
 - name: Undrain and enable compute nodes
   shell: |
-    scontrol update NodeName={{ item }} State=DOWN Reason="undraining"
-    scontrol update NodeName={{ item }} State=RESUME
+    scontrol update NodeName={{ inventory_hostname }} State=DOWN Reason=Startup
+    scontrol update NodeName={{ inventory_hostname }} State=RESUME
   changed_when: false
-  with_items: '{{ groups.gpu_nodes }}'
-  when: inventory_hostname in groups.control_nodes
-           
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups.control_nodes }}"
+  when: inventory_hostname not in groups.control_nodes

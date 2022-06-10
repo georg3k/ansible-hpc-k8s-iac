@@ -12,5 +12,10 @@
     state: restarted
   when: inventory_hostname not in groups.control_nodes
 
+- name: Restart munge
+  service:
+    name: munge
+    state: restarted
+
 - name: Reload firewalld
   shell: 'firewall-cmd --reload'

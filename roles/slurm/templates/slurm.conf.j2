@@ -1,13 +1,17 @@
-ClusterName={{ domain_name }}
+# Ansible generated template, do not edit!
+
+ClusterName=ansible-hpc
 SlurmctldHost=control-node
-MpiDefault=none
+MpiDefault=pmi2
 ProctrackType=proctrack/cgroup
-ReturnToService=1
+ReturnToService=0
 SlurmctldPidFile=/var/run/slurmctld.pid
 SlurmctldPort=6817
 SlurmdPidFile=/var/run/slurmd.pid
 SlurmdPort=6818
 SlurmdSpoolDir=/var/spool/slurmd
+SrunPortRange=50001-53000
+MpiParams=ports=60001-63000 
 SlurmUser=root
 StateSaveLocation=/var/spool/slurmctld
 SwitchType=switch/none
@@ -26,10 +30,10 @@ JobCompType=jobcomp/none
 JobAcctGatherFrequency=30
 JobAcctGatherType=jobacct_gather/none
 SlurmctldDebug=info
-SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmctldLogFile=/var/log/slurmctld.log
 SlurmdDebug=info
-SlurmdLogFile=/var/log/slurm/slurmd.log
+SlurmdLogFile=/var/log/slurmd.log
 {% for node in groups.gpu_nodes %}
 NodeName={{ hostvars[node].inventory_hostname }} CPUs={{ hostvars[node].properties.cpus }} RealMemory={{ hostvars[node].properties.memory }} Sockets={{ hostvars[node].properties.sockets }} CoresPerSocket={{ hostvars[node].properties.cps }} ThreadsPerCore={{ hostvars[node].properties.tpc }} State=UNKNOWN
 {% endfor %}
-PartitionName=cpu-nodes Nodes=ALL Default=YES MaxTime=INFINITE State=UP
+PartitionName=gpu-nodes Nodes=ALL Default=YES MaxTime=INFINITE State=UP
