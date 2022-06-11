@@ -1,0 +1,59 @@
+# Ansible generated template, do not edit!
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+http:
+  server_port: 4002
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 10.0.2.15
+
+homeassistant:
+  name: 'Server room'
+  latitude: 50
+  longitude: 40
+  elevation: 10
+  unit_system: metric
+  time_zone: Europe/Moscow
+  auth_providers:
+    - type: command_line
+      command: /config/hass-ldap-sync.py
+    - type: homeassistant
+
+zabbix:
+  host: zabbix.example.com
+  path: /
+  ssl: true
+  username: hass
+  password: !secret zabbix_pass
+  publish_states_host: "Home Assistant"
+  include:
+    entities:
+      - sensor.ir_ac_temperature
+      - sensor.ir_ac_humidity
+
+sonoff:
+  username: mail@example.com
+  password: !secret sonoff_pass
+
+sensor:
+- platform: template
+  sensors:
+    today_consumption_left:
+      friendly_name: Today consumpion (left PCB)
+      unit_of_measurement: kWh
+      value_template: "{{ state_attr('switch.sonoff_00', 'consumption').0 }}"
+    today_consumption_mid:
+      friendly_name: Today consumpion (mid PCB)
+      unit_of_measurement: kWh
+      value_template: "{{ state_attr('switch.sonoff_01', 'consumption').0 }}"
+    today_consumption_right:
+      friendly_name: Today consumpion (right PCB)
+      unit_of_measurement: kWh
+      value_template: "{{ state_attr('switch.sonoff_02', 'consumption').0 }}"
+

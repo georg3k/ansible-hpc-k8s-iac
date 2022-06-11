@@ -1,0 +1,99 @@
+{
+    "version": 1,
+    "key": "lovelace",
+    "data": {
+        "config": {
+            "title": "Server Room",
+            "views": [
+                {
+                    "path": "default_view",
+                    "title": "Home",
+                    "cards": [
+                        {
+                            "type": "entities",
+                            "entities": [
+                                {
+                                    "entity": "sensor.ir_ac_temperature"
+                                },
+                                {
+                                    "entity": "sensor.ir_ac_humidity"
+                                },
+                                {
+                                    "entity": "script.ac_turn_off"
+                                },
+                                {
+                                    "entity": "script.ac_set_cool"
+                                },
+                                {
+                                    "entity": "script.ac_set_normal"
+                                },
+                                {
+                                    "entity": "script.ac_set_warm"
+                                }
+                            ],
+                            "title": "AC control",
+                            "show_header_toggle": true,
+                            "state_color": false
+                        },
+                        {
+                            "type": "vertical-stack",
+                            "cards": [
+                                {
+                                    "type": "sensor",
+                                    "entity": "sensor.ir_ac_temperature",
+                                    "graph": "line"
+                                },
+                                {
+                                    "type": "sensor",
+                                    "entity": "sensor.ir_ac_humidity",
+                                    "graph": "line"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "grid",
+                            "cards": [
+                                {
+                                    "type": "button",
+                                    "tap_action": {
+                                        "action": "toggle"
+                                    },
+                                    "entity": "switch.sonoff_00"
+                                },
+                                {
+                                    "type": "button",
+                                    "tap_action": {
+                                        "action": "toggle"
+                                    },
+                                    "entity": "switch.sonoff_01"
+                                },
+                                {
+                                    "type": "button",
+                                    "tap_action": {
+                                        "action": "toggle"
+                                    },
+                                    "entity": "switch.sonoff_02"
+                                },
+                                {
+                                    "type": "sensor",
+                                    "entity": "sensor.today_consumption_left",
+                                    "graph": "line"
+                                },
+                                {
+                                    "type": "sensor",
+                                    "entity": "sensor.today_consumption_mid",
+                                    "graph": "line"
+                                },
+                                {
+                                    "type": "sensor",
+                                    "entity": "sensor.today_consumption_right",
+                                    "graph": "line"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

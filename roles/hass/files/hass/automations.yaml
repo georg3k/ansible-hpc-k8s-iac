@@ -1,0 +1,32 @@
+- id: '1638613309642'
+  alias: Set AC cooling mode
+  description: Cool the server room when air temperature is above 25
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.ir_ac_temperature
+    above: '25'
+  condition: []
+  action:
+  - service: script.ac_set_cool
+  mode: single
+- id: '1638616466355'
+  alias: Set AC normal operation
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.ir_ac_temperature
+    below: '25'
+  condition: []
+  action:
+  - service: script.ac_set_normal
+  mode: single
+- id: '1642190804139'
+  alias: Update power consumption
+  description: ''
+  trigger:
+  - platform: time_pattern
+    seconds: '0'
+  condition: []
+  action:
+  - service: sonoff.update_consumption
+  mode: single

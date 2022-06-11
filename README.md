@@ -159,6 +159,12 @@ Gitlab git and CI/CD server:
     * Sets up LDAP login and accounts management
     * Installs special script that implements some of paid Gitlab EE features regarding LDAP synchronization, admin management, etc.\
       Script project: [https://github.com/georg3k/gitlab-ldap-sync](https://github.com/georg3k/gitlab-ldap-sync)
+* hass \
+Home Assistant instance to manage HVAC and power devices:
+    * LDAP sync (for admins only)
+    * Custom auth plugin for LDAP auth: roles/hass/files/hass-ldap-sync.py
+    * Broadlink and SonoffLAN installed
+    * Preconfigured (you may want to provide your own configuration since this one is very specific for my environment)
 
 ### Roles structure
 

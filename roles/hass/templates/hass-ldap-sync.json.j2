@@ -1,0 +1,12 @@
+{
+  "log": "/var/log/hass-ldap-sync.log",
+  "log_level": "INFO",
+  "ldap": {
+    "url": "ldaps://{{ control_aliases.ldap }}.{{ domain_name }}",
+    "base_dn": "{{ domain_ldap }}",
+    "groups_base_dn": "ou=group,{{ domain_ldap }}",
+    "bind_dn": "cn=readonly,{{ domain_ldap }}",
+    "password": "{{ readonly_password }}",
+    "admin_group": "admins"
+  }
+}

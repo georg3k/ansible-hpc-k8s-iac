@@ -1,0 +1,54 @@
+---
+
+- name: Deploy Home Assistant
+  community.docker.docker_compose:
+    project_name: 'hass'
+    definition:
+      version: '3'
+      services:
+        server:
+          container_name: "server"
+          build: "{{ role_path }}/hass-image"
+          volumes:
+            - /docker/hass:/config
+            - /etc/localtime:/etc/localtime:ro
+          ports:
+            - 4002:4002
+          restart: always
+          privileged: true
+  when: inventory_hostname in groups.control_nodes
+
+- name: Generate hass configuration
+  template:
+    src: configuration.yaml.j2
+    dest: /docker/hass/configuration.yaml
+    mode: 0600
+
+- name: Copy hass secret file
+  copy:
+    src: secrets.yaml
+    dest: /docker/hass/secrets.yaml
+    mode: 600
+
+- name: Generate NGINX reverse proxy template
+  template:
+    src: hass.conf.j2
+    dest: /docker/nginx/sites-enabled/hass.conf
+    mode: 0600
+
+- name: Copy preconfigured hass data
+  synchronize:
+    src: hass
+    dest: /docker
+
+- name: Copy hass LDAP sync script
+  copy:
+    src: hass-ldap-sync.py
+    dest: /docker/hass/hass-ldap-sync.py
+    mode: 700
+
+- name: Generate hass LDAP sync config file
+  template:
+    src: hass-ldap-sync.json.j2
+    dest: /docker/hass/hass-ldap-sync.json
+    mode: 400

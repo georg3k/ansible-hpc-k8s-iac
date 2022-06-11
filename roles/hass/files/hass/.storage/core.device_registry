@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "minor_version": 3,
+    "key": "core.device_registry",
+    "data": {
+        "devices": [
+            {
+                "config_entries": [
+                    "28d7b4d671f302cebd11d509fc8a8cbe"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "met"
+                    ]
+                ],
+                "manufacturer": "Met.no",
+                "model": "Forecast",
+                "name": "Forecast",
+                "sw_version": null,
+                "hw_version": null,
+                "entry_type": "service",
+                "id": "223847fa66380e9f8fb91f7f57891e19",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null,
+                "configuration_url": "https://www.met.no/en"
+            }
+        ],
+        "deleted_devices": [
+            {
+                "config_entries": [
+                    "09f6ab088a8f04a941fdea58d96cd49a"
+                ],
+                "connections": [
+                    [
+                        "mac",
+                        "a0:43:b0:08:25:9f"
+                    ]
+                ],
+                "identifiers": [
+                    [
+                        "broadlink",
+                        "00"
+                    ]
+                ],
+                "id": "4c159472eb0c931203a2b0db35fcd3d8",
+                "orphaned_timestamp": null
+            }
+        ]
+    }
+}

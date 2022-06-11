@@ -47,7 +47,7 @@
           container_name: openldap
           environment:
             LDAP_LOG_LEVEL: "256"
-            LDAP_ORGANISATION: "SMCM SIMPLEX BMSTU"
+            LDAP_ORGANISATION: "ANSIBLE HPC ORG"
             LDAP_DOMAIN: '{{ domain_name }}'
             LDAP_BASE_DN: ""
             LDAP_READONLY_USER: "true"
