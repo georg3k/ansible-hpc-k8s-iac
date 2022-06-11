@@ -56,7 +56,7 @@
     state: join
     advertise_addr: '{{ networks.private.cidr | ipaddr("address") }}'
     join_token: '{{ worker_token.stdout }}'
-    remote_addrs: '{{ hostvars[item].inventory_hostname }}.private.cluster.{{ domain_name }}'
+    remote_addrs: '{{ hostvars[item].inventory_hostname }}.{{ domain_name }}'
   when: inventory_hostname in groups.control_nodes
   with_items: '{{ groups["cpu_nodes"] }}'
   

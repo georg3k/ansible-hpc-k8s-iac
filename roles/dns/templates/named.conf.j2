@@ -8,16 +8,10 @@ options {
     secroots-file "/var/named/data/named.secroots";
     recursing-file "/var/named/data/named.recursing";
     
-    allow-query {
+    listen-on {
         localhost;
-        {{ networks.private.cidr }};
-        {{ networks.management.cidr }};
-    };
-        
-    allow-recursion {
-        localhost;
-        {{ networks.private.cidr }};
-        {{ networks.management.cidr }};
+        {{ networks.private.cidr | ipaddr('address') }};
+        {{ networks.management.cidr | ipaddr('address') }};
     };
 
     forwarders {

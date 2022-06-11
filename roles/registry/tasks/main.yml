@@ -9,6 +9,8 @@
         registry:
           container_name: registry
           image: registry:2
+          volumes:
+          - /etc/localtime:/etc/localtime:ro
           ports:
           - '5000:5000'
           restart: always

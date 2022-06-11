@@ -4,13 +4,16 @@
   hosts: control_nodes
   become: True
   roles:
-  - network      # General network services
-  - chrony       # Time sync service
-  - dns          # BIND9 DNS service
-  - dhcp         # DHCP service
-  - pxe          # PXE netboot distro provisioning (tFTP + NFS)
-  - nas          # iSCSI, NFS and fstab configuration
-  - docker       # Docker, docker-compose and Docker Swarm setup
-  - slurm        # Slurm scheduler configuration
-  - auth         # OpenLDAP, LAM, PAM and SSH configuration
-  - registry     # Docker registry server
+  - network
+  - chrony
+  - dns
+  - dhcp
+  - pxe
+  - nas
+  - docker
+  - slurm
+  - auth
+  - registry
+  - nginx
+  - hass
+  - gitlab
