@@ -1,0 +1,6 @@
+---
+
+dependencies:
+    - role: docker
+    - { role: 'nginx', when: inventory_hostname in groups.control_nodes }
+      

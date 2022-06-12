@@ -1,0 +1,12 @@
+PidFile=/run/zabbix/zabbix_agentd.pid
+LogFile=/var/log/zabbix/zabbix_agentd.log
+LogFileSize=0
+
+{% if inventory_hostname in groups['control_nodes'] %}
+SourceIP={{ networks.private.cidr | ipaddr('address') }}
+{% elif inventory_hostname in groups['cpu_nodes'] %}
+SourceIP={{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(inventory_hostname) + 199) }}
+{% elif inventory_hostname in groups['gpu_nodes'] %}
+SourceIP={{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(inventory_hostname) + 199) }}
+{% endif %}
+Server={{ networks.private.cidr | ipaddr('address') }}

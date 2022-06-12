@@ -1,0 +1,119 @@
+---
+
+- name: Create ZABBIX bind directory
+  file:
+    path: /docker/zabbix
+    state: directory
+    mode: 0775
+  when: inventory_hostname in groups.control_nodes
+
+- name: Deploy ZABBIX
+  community.docker.docker_compose:
+    project_name: 'zabbix'
+    definition:
+      version: '3'
+      services:
+        zabbix_postgres:
+          container_name: zabbix_postgres
+          image: postgres:13.6-alpine
+          volumes:
+            - /docker/zabbix/postgres:/var/lib/postgresql/data
+            - /etc/localtime:/etc/localtime:ro
+          environment:
+            POSTGRES_DB: zabbixdb
+            POSTGRES_USER: zabbix
+            POSTGRES_PASSWORD: "{{ admin_password }}"
+          restart: always
+        zabbix_server:
+          container_name: zabbix_server
+          image: zabbix/zabbix-server-pgsql:alpine-latest
+          environment:
+            DB_SERVER_HOST: zabbix_postgres
+            DB_SERVER_PORT: 5432
+            POSTGRES_DB: zabbixdb
+            POSTGRES_USER: zabbix
+            POSTGRES_PASSWORD: "{{ admin_password }}"
+            ZBX_VALUECACHESIZE: 64M
+            ZBX_CACHESIZE: 128M
+            ZBX_TRENDCACHESIZE: 128M
+            ZBX_IPMIPOLLERS: 5
+          volumes:
+            - /etc/openldap/ldap.conf:/etc/openldap/ldap.conf:ro
+            - /etc/localtime:/etc/localtime:ro
+          ports:
+            - "10051:10051"
+          restart: always
+          depends_on:
+            - zabbix_postgres
+        zabbix_web:
+          container_name: zabbix_web
+          image: zabbix/zabbix-web-nginx-pgsql:latest
+          volumes:
+            - /etc/localtime:/etc/localtime:ro
+          ports:
+            - "4003:8080"
+          environment:
+            DB_SERVER_HOST: zabbix_postgres
+            DB_SERVER_PORT: 5432
+            POSTGRES_DB: zabbixdb
+            POSTGRES_USER: zabbix
+            POSTGRES_PASSWORD: "{{ admin_password }}"
+            ZBX_SERVER_HOST: zabbix_server
+            ZBX_SERVER_PORT: 4002
+            PHP_TZ: Europe/Moscow
+          restart: always
+          depends_on:
+            - zabbix_postgres
+        zabbix_agent:
+          container_name: zabbix_agent
+          image: zabbix/zabbix-agent:latest
+          restart: always
+          environment:
+            ZBX_HOSTNAME: zabbix_agent
+            ZBX_SERVER_HOST: zabbix_server
+          ports:
+            - 10050:10050
+          privileged: true
+  when: inventory_hostname in groups.control_nodes
+
+- name: Generate NGINX reverse proxy template
+  template:
+    src: zabbix.conf.j2
+    dest: /docker/nginx/sites-enabled/zabbix.conf
+    mode: 0600
+  when: inventory_hostname in groups.control_nodes
+
+- name: Install EPEL
+  dnf:
+    name: 'epel-release'
+    state: latest
+  when: inventory_hostname not in groups.control_nodes
+
+- name: Install ZABBIX agent
+  dnf:
+    name: ['zabbix40-agent']
+    state: latest
+  when: inventory_hostname not in groups.control_nodes
+
+- name: Copy ZABBIX agent configuration
+  template:
+    src: zabbix_agentd.conf.j2
+    dest: /etc/zabbix_agentd.conf
+    mode: 644
+  when: inventory_hostname not in groups.control_nodes
+  
+- name: Start and enable ZABBIX agent
+  service:
+    name: zabbix-agent
+    state: started
+    enabled: true
+  when: inventory_hostname not in groups.control_nodes
+
+- name: Allow ZABBIX agent passive mode traffic
+  ansible.posix.firewalld:
+    port: '10050/tcp'
+    zone: 'private'
+    permanent: yes
+    state: enabled
+  notify: Reload firewalld
+  when: inventory_hostname not in groups.control_nodes

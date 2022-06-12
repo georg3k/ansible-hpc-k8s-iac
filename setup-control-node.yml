@@ -15,5 +15,6 @@
   - auth
   - registry
   - nginx
+  - zabbix
   - hass
   - gitlab
