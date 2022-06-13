@@ -1,2 +1,3 @@
-BASE    {{ domain_ldap }}
-URI     ldaps://{{ control_aliases.ldap }}.{{ domain_name }}
+BASE        {{ domain_ldap }}
+URI         ldaps://{{ control_aliases.ldap }}.{{ domain_name }}
+TLS_REQCERT never

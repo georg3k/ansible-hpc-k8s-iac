@@ -15,7 +15,7 @@ hidePasswordPromptForExpiredPasswords: false
 
 Passwd: {CRYPT-SHA512}{{ admin_password | string | password_hash('sha512', inventory_hostname | hash('sha512') | truncate(16, True, '')) }} {{ inventory_hostname | hash('sha512') | truncate(16, True, '') | b64encode }}
 
-Admins: cn=admin,{{ domain_ldap }}
+Admins: cn=admin,{{ domain_ldap }};cn=readonly,{{ domain_ldap }}
 
 defaultLanguage: en_US.utf8
 

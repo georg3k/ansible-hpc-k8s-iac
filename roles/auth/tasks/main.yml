@@ -43,13 +43,13 @@
       version: '3'
       services:
         openldap:
-          image: osixia/openldap:1.2.4
+          image: osixia/openldap:1.5.0
           container_name: openldap
           environment:
             LDAP_LOG_LEVEL: "256"
             LDAP_ORGANISATION: "ANSIBLE HPC ORG"
             LDAP_DOMAIN: '{{ domain_name }}'
-            LDAP_BASE_DN: ""
+            LDAP_BASE_DN: "{{ domain_ldap }}"
             LDAP_READONLY_USER: "true"
             LDAP_ADMIN_PASSWORD: '{{ admin_password }}'
             LDAP_CONFIG_PASSWORD: '{{ admin_password }}'
@@ -57,7 +57,7 @@
             LDAP_BACKEND: "mdb"
             KEEP_EXISTING_CONFIG: "false"
             LDAP_TLS: "true"
-            LDAP_TLS_ENFORCE: "true"
+            LDAP_TLS_ENFORCE: "false"
             LDAP_TLS_VERIFY_CLIENT: "never"
             LDAP_TLS_CRT_FILENAME: "serverCerts.pem"
           tty: true
@@ -68,6 +68,7 @@
             - /docker/ldap:/container/service/slapd/assets/certs
             - /etc/localtime:/etc/localtime:ro
           ports:
+            - "389:389"
             - "636:636"
           restart: always
           hostname: '{{ control_aliases.ldap }}.{{ domain_name }}'
@@ -88,13 +89,13 @@
   
 - name: Allow LDAP traffic
   ansible.posix.firewalld:
-    service: ldaps
-    zone: '{{ item }}'
+    service: '{{ item[0] }}'
+    zone: '{{ item[1] }}'
     permanent: yes
     state: enabled
-  with_items:
-    - private
-    - management
+  with_nested:
+    - ['ldap', 'ldaps']
+    - ['private', 'management']
   notify: Reload firewalld
   when: inventory_hostname in groups.control_nodes
 
