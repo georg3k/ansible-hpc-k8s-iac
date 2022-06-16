@@ -16,6 +16,9 @@ The purpose of this project is to provide an automated environment for setting u
 
 ## Quick start
 
+> **Note**
+> For simplicity control node playbook deploys all services on one central node. This approach may be ok in testing environments or small scale applications, but is generally not recommended. You may want to deploy services not directly involved in HPC computations (Gitlab, Zabbix, etc) on separate servers. This requires some modifications to the code.
+
 ### Prerequisites
 
 Before deploying configuration make sure that the control node meets all the requirements:
@@ -165,6 +168,10 @@ Home Assistant instance to manage HVAC and power devices:
     * Custom auth plugin for LDAP auth: roles/hass/files/hass-ldap-sync.py
     * Broadlink and SonoffLAN installed
     * Preconfigured (you may want to provide your own configuration since this one is very specific for my environment)
+* zabbix \
+Infrastructure monitoring:
+    * Deploys Zabbix in docker
+    * Enables LDAP sync and login
 
 ### Roles structure
 

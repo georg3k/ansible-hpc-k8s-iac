@@ -111,8 +111,8 @@
 
 - name: Allow ZABBIX agent passive mode traffic
   ansible.posix.firewalld:
-    port: '10050/tcp'
-    zone: 'private'
+    port: 10050/tcp
+    zone: private
     permanent: yes
     state: enabled
   notify: Reload firewalld

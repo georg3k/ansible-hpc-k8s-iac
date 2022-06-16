@@ -125,9 +125,9 @@ if __name__ == "__main__":
                             ldap_group['members'].append({
                                 'username': user_data['uid'][0].decode(),
                                 'name': user_data['cn'][0].decode(),
-                                'identities': 'cn=%s,%s' % (user_data['cn'][0].decode(), str(config['ldap']['users_base_dn']).lower()),
+                                'identities': 'cn=%s,%s' % (user_data['cn'][0].decode(), str(config['ldap']['users_base_dn'])),
                                 'email': user_data['mail'][0].decode(),
-                                'sshPublicKey': [key.decode() for key in user_data['sshPublicKey']] if 'sshPublicKey' in user_data.keys() else []
+                                'sshPublicKey': [key.decode() for key in user_data['sshPublicKey']][0] if 'sshPublicKey' in user_data.keys() else []
                             })
                 ldap_groups.append(ldap_group)
 
@@ -141,7 +141,7 @@ if __name__ == "__main__":
                         ldap_group["members"].append({
                             'username': user_data['uid'][0].decode(),
                             'name': user_data['cn'][0].decode(),
-                            'identities': 'cn=%s,%s' % (user_data['cn'][0].decode(), str(config['ldap']['users_base_dn']).lower()),
+                            'identities': 'cn=%s,%s' % (user_data['cn'][0].decode(), str(config['ldap']['users_base_dn'])),
                             'email': user_data['mail'][0].decode(),
                             'sshPublicKey': [key.decode() for key in user_data['sshPublicKey']] if 'sshPublicKey' in user_data.keys() else []
                         })
@@ -177,43 +177,15 @@ if __name__ == "__main__":
                 for l_member in l_group['members']:
 
                     # Check if given user is present in Gitlab group
-                    if l_member not in gitlab_groups[gitlab_groups_names.index(l_group['name'])]['members']:
-                        logging.info('|  |- User %s is member in LDAP but not in GitLab, updating GitLab.' % l_member['name'])
+                    if l_member['username'] not in [g_member['username'] for g_member in gitlab_groups[gitlab_groups_names.index(l_group['name'])]['members']]:
+                        logging.info('|  |- User %s is member in LDAP group but not in GitLabgroup , adding.' % l_member['name'])
                         g = [group for group in gl.groups.list(search=l_group['name']) if group.name == l_group['name']][0]
                         g.save()
                         u = gl.users.list(search=l_member['username'])
 
-                        # Update user information if it is already in Gitlab
+                        # If user exists in Gitlab globally
                         if len(u) > 0:
                             u = u[0]
-
-                            # Sync SSH public keys
-                            for key in u.keys.list():
-                                if key.title == 'Synced account SSH key':
-                                    u.keys.delete(key.id)
-                            u.save()
-                            for key in l_member['sshPublicKey']:
-                                u.keys.create({
-                                    'title': 'Synced account SSH key',
-                                    'key': key
-                                })
-
-                            # Set email
-                            headers = {
-                                'PRIVATE-TOKEN': config['gitlab']['private_token'],
-                                'Sudo': 'root'
-                            }
-                            if u.email != l_member['email']:
-                                new_email = requests.put('%s/api/v4/users/%s?email=%s&skip_reconfirmation=true' % (config['gitlab']['api'], u.id, l_member['email']), headers=headers)
-                                u = gl.users.list(search=l_member['username'])[0]
-                                for email in u.emails.list():
-                                    if str(email.id) != new_email.json()['id']:
-                                        requests.delete('%s/api/v4/users/%s/emails/%s' % (config['gitlab']['api'], u.id, email.id), headers=headers)
-                                        u = gl.users.list(search=l_member['username'])[0]
-
-                            # Set name
-                            u.name = l_member['name']
-                            u.save()
 
                             # Add user to corresponding group
                             if u not in g.members.list(all=True):
@@ -269,7 +241,51 @@ if __name__ == "__main__":
                             else:
                                 logging.info('|  |- User %s does not exist in gitlab, skipping.' % l_member['name'])
                     else:
-                        logging.info('|  |- User %s already in gitlab group, skipping.' % l_member['name'])
+                        logging.info('|  |- User %s already in gitlab group, updating.' % l_member['name'])
+
+                        users = gl.users.list(search=l_member['username'])
+
+                        if(len(users) > 0):
+
+                            u = users[0]
+
+                            # Sync SSH public keys
+                            for key in u.keys.list():
+                                if key.title == 'Synced account SSH key':
+                                    u.keys.delete(key.id)
+                            u.save()
+
+                            for key in l_member['sshPublicKey']:
+                                u.keys.create({
+                                    'title': 'Synced account SSH key',
+                                    'key': key
+                                })
+
+                            # Set email
+                            headers = {
+                                'PRIVATE-TOKEN': config['gitlab']['private_token'],
+                                'Sudo': 'root'
+                            }
+
+                            # If email in LDAP was updated
+                            # Important!: waiting for a bug to be fixed: https://gitlab.com/gitlab-org/gitlab/-/issues/25077
+                            #if u.email != l_member['email']:
+                            #    print('updating mail from %s to %s' % (u.email, l_member['email']))
+                            #    new_email = requests.put('%s/api/v4/users/%s?email=%s&skip_reconfirmation=true' % (config['gitlab']['api'], u.id, l_member['email']), headers=headers)
+                            #    print('new email: %s' % l_member['email'])
+                            #    u = gl.users.list(search=l_member['username'])[0]
+                            #    all_emails = u.emails.list()
+                            #    all_emails.append(u.email)
+                            #    for email in u.emails.list():
+                            #        print('checking email: %s' % email.email)
+                            #        if str(email.email) != l_member['email']:
+                            #            print('deleting email id %s: %s' % (email.id, email.email))
+                            #            requests.delete('%s/api/v4/users/%s/emails/%s' % (config['gitlab']['api'], u.id, email.id), headers=headers)
+
+                            # Set name
+                            print('updating name from %s to %s' % (u.name, l_member['name']))
+                            u.name = l_member['name']
+                            u.save()
 
                 logging.info('Done.')
 
@@ -288,7 +304,7 @@ if __name__ == "__main__":
 
                         # Remove user from Gitlab group if they was removed from LDAP group
                         if g_member not in ldap_groups[ldap_groups_names.index(g_group['name'])]['members']:
-                            if 'sn=%s,%s' % (g_member['username'], str(config['ldap']['users_base_dn']).lower()) not in g_member['identities']:
+                            if 'sn=%s,%s' % (g_member['username'], str(config['ldap']['users_base_dn'])) not in g_member['identities']:
                                 logging.info('|  |- Not a LDAP user, skipping.')
                             else:
                                 logging.info('|  |- User %s no longer in LDAP Group, removing.' % g_member['name'])
