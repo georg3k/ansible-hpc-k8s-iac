@@ -15,3 +15,6 @@
   
 - name: Reload firewalld
   shell: 'firewall-cmd --reload'
+  
+- name: Restart NGINX
+  shell: docker restart nginx

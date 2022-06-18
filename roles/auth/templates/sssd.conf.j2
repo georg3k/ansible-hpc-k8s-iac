@@ -19,10 +19,10 @@ auth_provider = ldap
 chpass_provider = ldap
 access_provider = ldap
 ldap_uri = ldaps://{{ control_aliases.ldap }}.{{ domain_name }}
-ldap_default_bind_dn = cn=admin,dc=example,dc=com
+ldap_default_bind_dn = cn=admin,{{ domain_ldap }}
 ldap_default_authtok = {{ admin_password }}
 ldap_search_timeout = 50
 ldap_network_timeout = 60
 ldap_access_order = filter
 ldap_access_filter = (objectClass=posixAccount)
-ldap_tls_reqcert = allow
+ldap_tls_reqcert = demand

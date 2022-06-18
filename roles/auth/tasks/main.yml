@@ -57,7 +57,7 @@
             LDAP_BACKEND: "mdb"
             KEEP_EXISTING_CONFIG: "false"
             LDAP_TLS: "true"
-            LDAP_TLS_ENFORCE: "false"
+            LDAP_TLS_ENFORCE: "true"
             LDAP_TLS_VERIFY_CLIENT: "never"
             LDAP_TLS_CRT_FILENAME: "serverCerts.pem"
           tty: true
@@ -134,6 +134,13 @@
   template:
     src: ldap.conf.j2
     dest: /etc/openldap/ldap.conf
+  notify:
+    - Restart SSSD
+
+- name: Save LDAP TLS certificate
+  shell: openssl s_client -connect ldap.example.com:636 -showcerts > /etc/openldap/certs/ca.crt & sleep 2
+  args:
+    creates: /etc/openldap/certs/ca.crt
   notify:
     - Restart SSSD
   
@@ -232,3 +239,4 @@
     dest: /docker/nginx/sites-enabled/lam.conf
     mode: 0600
   when: inventory_hostname in groups.control_nodes
+  notify: Restart NGINX
