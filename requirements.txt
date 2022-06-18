@@ -1,6 +1,5 @@
 netaddr
+passlib
 docker
 docker-compose
-passlib
-python-gitlab
-python-ldap
+zabbix-api

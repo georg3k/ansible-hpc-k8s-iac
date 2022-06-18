@@ -84,6 +84,9 @@ host_name_2 <options>
 
 ### group_vars
 
+> **Note**
+> Encrypted passwords marked with !vault don't contain any real information and given for demonstrational purposes only, change them to match your data
+
 **group_vars/all.yml** file includes global configuration parameters such as network CIDRs, domain names, etc. You should change these options to match your environment. Purpose of each parameter is described in comments.
 
 ### host_vars
