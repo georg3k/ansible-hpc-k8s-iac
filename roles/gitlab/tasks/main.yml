@@ -56,6 +56,7 @@
     src: gitlab.conf.j2
     dest: /docker/nginx/sites-enabled/gitlab.conf
     mode: 0600
+  notify: Restart NGINX
 
 - name: Wait for Gitlab to startup
   local_action:
@@ -82,6 +83,15 @@
     token.save!'
   failed_when: false
   changed_when: false
+
+- name: Install Gitlab LDAP sync script dnf dependencies
+  dnf:
+    name: ['gcc-toolset-11', 'python3-devel', 'openldap-devel']
+    state: latest
+
+- name: Install Gitlab LDAP sync script pip dependencies
+  pip:
+    name: ['python-gitlab', 'python-ldap']
 
 - name: Copy Gitlab LDAP sync script
   copy:

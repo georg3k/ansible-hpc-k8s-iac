@@ -1,0 +1,4 @@
+---
+
+- name: Restart NGINX
+  shell: docker restart nginx
