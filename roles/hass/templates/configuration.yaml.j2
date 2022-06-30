@@ -11,15 +11,15 @@ http:
   server_port: 4002
   use_x_forwarded_for: true
   trusted_proxies:
-    - {{ networks.public.cidr | ipaddr('address') }}
+    - {{ networks.private.cidr | ipaddr('address') }}
 
 homeassistant:
   name: 'Server room'
-  latitude: 50
-  longitude: 40
-  elevation: 10
+  latitude: {{ gps_latitude }}
+  longitude: {{ gps_longitude }}
+  elevation: {{ gps_elevation }}
   unit_system: metric
-  time_zone: Europe/Moscow
+  time_zone: {{ timezone }}
   auth_providers:
     - type: command_line
       command: /config/hass-ldap-sync.py
@@ -29,31 +29,42 @@ zabbix:
   host: {{ external_subdomains.zabbix }}.{{ domain_name }}
   path: /
   ssl: true
-  username: hass
-  password: !secret zabbix_pass
-  publish_states_host: "Home Assistant"
+  username: Admin
+  password: {{ admin_password }}
+  publish_states_host: "Zabbix server"
   include:
     entities:
       - sensor.ir_ac_temperature
       - sensor.ir_ac_humidity
 
 sonoff:
-  username: mail@example.com
+  username: !secret sonoff_login
   password: !secret sonoff_pass
 
 sensor:
 - platform: template
   sensors:
-    today_consumption_left:
-      friendly_name: Today consumpion (left PCB)
-      unit_of_measurement: kWh
-      value_template: "{% raw %}{{ state_attr('switch.sonoff_00', 'consumption').0 }}{% endraw %}"
-    today_consumption_mid:
-      friendly_name: Today consumpion (mid PCB)
-      unit_of_measurement: kWh
-      value_template: "{% raw %}{{ state_attr('switch.sonoff_01', 'consumption').0 }}{% endraw %}"
-    today_consumption_right:
-      friendly_name: Today consumpion (right PCB)
-      unit_of_measurement: kWh
-      value_template: "{% raw %}{{ state_attr('switch.sonoff_02', 'consumption').0 }}{% endraw %}"
-
+    current_left:
+      friendly_name: Left PCB - current
+      unit_of_measurement: A
+      value_template: "{% raw %}{{ state_attr('switch.sonoff_00', 'current') }}{% endraw %}"
+    current_mid:
+      friendly_name: Mid PCB - current
+      unit_of_measurement: A
+      value_template: "{% raw %}{{ state_attr('switch.sonoff_01', 'current') }}{% endraw %}"
+    current_right:
+      friendly_name: Right PCB - current
+      unit_of_measurement: A
+      value_template: "{% raw %}{{ state_attr('switch.sonoff_02', 'current') }}{% endraw %}"
+    power_left:
+       friendly_name: Left PCB - power
+       unit_of_measurement: W
+       value_template: "{% raw %}{{ state_attr('switch.sonoff_00', 'power') }}{% endraw %}"
+    power_mid:
+       friendly_name: Mid PCB - power
+       unit_of_measurement: W
+       value_template: "{% raw %}{{ state_attr('switch.sonoff_01', 'power') }}{% endraw %}"
+    power_right:
+       friendly_name: Right PCB - power
+       unit_of_measurement: W
+       value_template: "{% raw %}{{ state_attr('switch.sonoff_02', 'power') }}{% endraw %}"

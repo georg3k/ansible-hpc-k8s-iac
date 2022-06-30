@@ -2,3 +2,9 @@
 
 - name: Reload firewalld
   shell: 'firewall-cmd --reload'
+
+- name: Restart HASS
+  shell: docker restart hass
+
+- name: Restart NGINX
+  shell: docker restart nginx

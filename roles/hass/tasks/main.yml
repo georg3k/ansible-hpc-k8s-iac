@@ -6,8 +6,8 @@
     definition:
       version: '3'
       services:
-        server:
-          container_name: "server"
+        hass:
+          container_name: "hass"
           build: "{{ role_path }}/hass-image"
           volumes:
             - /docker/hass:/config
@@ -18,28 +18,41 @@
           privileged: true
   when: inventory_hostname in groups.control_nodes
 
+- name: Generate hass secrets
+  template:
+    src: secrets.yaml.j2
+    dest: /docker/hass/secrets.yaml
+    mode: 0400
+  notify: Restart HASS
+
 - name: Generate hass configuration
   template:
     src: configuration.yaml.j2
     dest: /docker/hass/configuration.yaml
     mode: 0600
-
-- name: Copy hass secret file
-  copy:
-    src: secrets.yaml
-    dest: /docker/hass/secrets.yaml
-    mode: 600
+  notify: Restart HASS
 
 - name: Generate NGINX reverse proxy template
   template:
     src: hass.conf.j2
     dest: /docker/nginx/sites-enabled/hass.conf
     mode: 0600
+  notify: Restart NGINX
 
 - name: Copy preconfigured hass data
   synchronize:
     src: hass
     dest: /docker
+  notify: Restart HASS
+
+- name: Install hass LDAP sync script dnf dependencies
+  dnf:
+    name: ['gcc-toolset-11', 'python3-devel', 'openldap-devel']
+    state: latest
+
+- name: Install hass LDAP sync script pip dependencies
+  pip:
+    name: ['python-ldap']
 
 - name: Copy hass LDAP sync script
   copy:
