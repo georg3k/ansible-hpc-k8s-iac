@@ -53,3 +53,4 @@
 #    src: certbot.conf.j2
 #    dest: /docker/nginx/sites-enabled/certbot.conf
 #    mode: 0600
+#  notify: Restart NGINX

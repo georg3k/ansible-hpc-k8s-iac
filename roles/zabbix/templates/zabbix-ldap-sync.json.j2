@@ -1,0 +1,18 @@
+{
+  "log": "/var/log/zabbix-ldap-sync.log",
+  "log_level": "INFO",
+  "zabbix": {
+    "api": "http://{{ external_subdomains.zabbix }}.{{ domain_name }}",
+    "username": "Admin",
+    "password": "{{ admin_password }}"
+  },
+  "ldap": {
+    "url": "ldaps://{{ control_aliases.ldap }}.{{ domain_name }}",
+    "users_base_dn": "ou=People,{{ domain_ldap }}",
+    "groups_base_dn": "ou=group,{{ domain_ldap }}",
+    "bind_dn": "cn=readonly,{{ domain_ldap }}",
+    "password": "{{ readonly_password }}",
+    "admins_group": "admins",
+    "users_groups": [ "developers", "testers" ]
+  }
+}

@@ -26,7 +26,7 @@
           restart: always
         zabbix_server:
           container_name: zabbix_server
-          image: zabbix/zabbix-server-pgsql:alpine-latest
+          image: zabbix/zabbix-server-pgsql:5.4.10-alpine
           environment:
             DB_SERVER_HOST: zabbix_postgres
             DB_SERVER_PORT: 5432
@@ -38,7 +38,6 @@
             ZBX_TRENDCACHESIZE: 128M
             ZBX_IPMIPOLLERS: 5
           volumes:
-            - /etc/openldap/ldap.conf:/etc/openldap/ldap.conf:ro
             - /etc/localtime:/etc/localtime:ro
           ports:
             - "10051:10051"
@@ -47,8 +46,9 @@
             - zabbix_postgres
         zabbix_web:
           container_name: zabbix_web
-          image: zabbix/zabbix-web-nginx-pgsql:latest
+          image: zabbix/zabbix-web-nginx-pgsql:5.4.10-alpine
           volumes:
+            - /etc/openldap:/etc/openldap:ro
             - /etc/localtime:/etc/localtime:ro
           ports:
             - "4003:8080"
@@ -59,7 +59,7 @@
             POSTGRES_USER: zabbix
             POSTGRES_PASSWORD: "{{ admin_password }}"
             ZBX_SERVER_HOST: zabbix_server
-            ZBX_SERVER_PORT: 4002
+            ZBX_SERVER_PORT: 10051
             PHP_TZ: Europe/Moscow
           restart: always
           depends_on:
@@ -81,6 +81,172 @@
     src: zabbix.conf.j2
     dest: /docker/nginx/sites-enabled/zabbix.conf
     mode: 0600
+  when: inventory_hostname in groups.control_nodes
+  notify: Restart NGINX
+
+- name: Wait for ZABBIX to startup
+  local_action:
+    module: uri
+    url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    follow_redirects: all
+    method: GET
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 10
+  when: inventory_hostname in groups.control_nodes
+
+- name: Change ZABBIX default password
+  community.zabbix.zabbix_user:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: zabbix
+    alias: Admin
+    passwd: "{{ admin_password }}"
+    override_passwd: yes
+    usrgrps:
+    - Zabbix administrators
+    state: present
+  register: result
+  ignore_errors: True
+  failed_when: False
+  when: inventory_hostname in groups.control_nodes
+
+- name: Update ZABBIX server host entry
+  community.zabbix.zabbix_host:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_name: "Zabbix server"
+    interfaces:
+    - type: agent
+      main: 1
+      useip: 0
+      port: '10050'
+      dns: zabbix_agent
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX user groups
+  community.zabbix.zabbix_usergroup:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "{{ item }}"
+    gui_access: LDAP
+  with_items:
+    - Admins
+    - Users
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX host groups
+  community.zabbix.zabbix_group:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_groups:
+      - Web cluster nodes
+      - Compute cluster nodes
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX discovery rule for web cluster nodes
+  community.zabbix.zabbix_discovery_rule:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Web cluster"
+    iprange: "{{ networks.private.cidr | ipaddr('address') | ipmath(99) }}-{{ [(networks.private.cidr | ipaddr('address')).split('.')[3] | int + 198, 254] | min }}"
+    dchecks:
+        - type: Zabbix
+          key: "system.hostname"
+          name_source: DNS
+          ports: '10050'
+    state: present
+    status: enabled
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX discovery rule for compute cluster nodes
+  community.zabbix.zabbix_discovery_rule:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Compute cluster"
+    iprange: "{{ networks.private.cidr | ipaddr('address') | ipmath(199) }}-{{ [(networks.private.cidr | ipaddr('address')).split('.')[3] | int + 299, 254] | min }}"
+    dchecks:
+        - type: Zabbix
+          key: "system.hostname"
+          name_source: DNS
+          ports: '10050'
+    state: present
+    status: enabled
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create discovery action for web cluster
+  community.zabbix.zabbix_action:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Web cluster group"
+    event_source: 'discovery'
+    state: present
+    status: enabled
+    esc_period: '60'
+    conditions:
+      - type: 'discovery_rule'
+        operator: '='
+        value: 'Web cluster'
+      - type: 'discovered_service_type'
+        operator: '='
+        value: 'Zabbix agent'
+    operations:
+      - type: add_host
+        templates: 'Linux by Zabbix agent'
+      - type: add_to_host_group
+        host_groups: 'Web cluster nodes'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create discovery action for compute cluster
+  community.zabbix.zabbix_action:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Compute cluster group"
+    event_source: 'discovery'
+    state: present
+    status: enabled
+    esc_period: '60'
+    conditions:
+      - type: 'discovery_rule'
+        operator: '='
+        value: 'Compute cluster'
+      - type: 'discovered_service_type'
+        operator: '='
+        value: 'Zabbix agent'
+    operations:
+      - type: add_host
+        templates: 'Linux by Zabbix agent'
+      - type: add_to_host_group
+        host_groups: 'Compute cluster nodes'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Setup ZABBIX Telegram bot
+  community.zabbix.zabbix_mediatype:
+    name: "Telegram"
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    type: 'webhook'
+    webhook_script: "{{ lookup('file', 'telebot.js') }}"
+    webhook_params:
+      - name: 'Message'
+        value: '{ALERT.MESSAGE}'
+      - name: 'ParseMode'
+        value: ''
+      - name: 'Subject'
+        value: '{ALERT.SUBJECT}'
+      - name: 'To'
+        value: '{ALERT.SENDTO}'
+      - name: 'Token'
+        value: "{{ telegram_token }}"
   when: inventory_hostname in groups.control_nodes
 
 - name: Install EPEL
@@ -109,7 +275,7 @@
     enabled: true
   when: inventory_hostname not in groups.control_nodes
 
-- name: Allow ZABBIX agent passive mode traffic
+- name: Allow ZABBIX agent traffic
   ansible.posix.firewalld:
     port: 10050/tcp
     zone: private
@@ -117,3 +283,34 @@
     state: enabled
   notify: Reload firewalld
   when: inventory_hostname not in groups.control_nodes
+
+- name: Install ZABBIX LDAP sync script dnf dependencies
+  dnf:
+    name: ['gcc-toolset-11', 'python3-devel', 'openldap-devel']
+    state: latest
+
+- name: Install ZABBIX LDAP sync script pip dependencies
+  pip:
+    name: 'python-ldap'
+
+- name: Copy ZABBIX LDAP sync script
+  copy:
+    src: zabbix-ldap-sync.py
+    dest: /root/zabbix-ldap-sync.py
+    mode: 700
+  when: inventory_hostname in groups.control_nodes
+
+- name: Generate ZABBIX LDAP sync config file
+  template:
+    src: zabbix-ldap-sync.json.j2
+    dest: /root/zabbix-ldap-sync.json
+    mode: 400
+  when: inventory_hostname in groups.control_nodes
+
+- name: Enable sync script to run every minute
+  cron:
+    name: "Sync ZABBIX with LDAP"
+    minute: '*/1'
+    user: root
+    job: "/root/zabbix-ldap-sync.py"
+    cron_file: zabbix_ldap

@@ -41,7 +41,7 @@ part /     --ondisk=sda --fstype ext4 --size=1 --grow
 timezone Europe/Moscow --isUtc
 
 # Root password
-rootpw --iscrypted {{ root_passwd | string | password_hash('sha512') }}
+rootpw --iscrypted {{ root_passwd | string | password_hash('sha512', inventory_hostname | hash('sha512') | truncate(16, True, '')) }}
 
 %addon com_redhat_kdump --enable --reserve-mb='auto'
 
