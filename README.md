@@ -175,6 +175,9 @@ Home Assistant instance to manage HVAC and power devices:
 Infrastructure monitoring:
     * Deploys Zabbix in docker
     * Enables LDAP sync and login
+    * Discovery rules
+    * Installs special script that implements LDAP accounts synchronization similar to Gitlab \
+      Script project: [https://github.com/georg3k/zabbix-ldap-sync](https://github.com/georg3k/zabbix-ldap-sync)
 
 ### Roles structure
 
