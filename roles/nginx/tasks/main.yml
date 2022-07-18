@@ -54,3 +54,6 @@
 #    dest: /docker/nginx/sites-enabled/certbot.conf
 #    mode: 0600
 #  notify: Restart NGINX
+
+#- name: Sync handlers
+#  meta: flush_handlers

@@ -58,6 +58,9 @@
     mode: 0600
   notify: Restart NGINX
 
+- name: Sync handlers
+  meta: flush_handlers
+
 - name: Wait for Gitlab to startup
   local_action:
     module: uri

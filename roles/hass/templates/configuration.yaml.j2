@@ -1,11 +1,6 @@
 # Ansible generated template, do not edit!
 
-# Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
-
-# Text to speech
-tts:
-  - platform: google_translate
 
 http:
   server_port: 4002
@@ -68,3 +63,165 @@ sensor:
        friendly_name: Right PCB - power
        unit_of_measurement: W
        value_template: "{% raw %}{{ state_attr('switch.sonoff_02', 'power') }}{% endraw %}"
+
+script:
+  learn_ac_commands:
+    alias: Learn AC remote commands
+    sequence:
+      - service: remote.learn_command
+        target:
+          entity_id: remote.ir_ac_remote
+        data:
+          device: AC
+          command_type: ir
+          command:
+          - turn_off
+          - set_cool
+          - set_normal
+          - set_warm
+    mode: single
+    icon: mdi:remote-tv
+    
+  ac_turn_off:
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.ir_ac_remote
+        data:
+          device: AC
+          command: turn_off
+    mode: single
+    alias: AC toggle
+    icon: mdi:hvac
+    
+  ac_set_cool:
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.ir_ac_remote
+        data:
+          device: AC
+          command: set_cool
+    mode: single
+    alias: AC set cool
+    icon: mdi:hvac
+
+  ac_set_normal:
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.ir_ac_remote
+        data:
+          device: AC
+          command: set_normal
+    mode: single
+    alias: AC set normal
+    icon: mdi:hvac
+        
+  ac_set_warm:
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.ir_ac_remote
+        data:
+          device: AC
+          command: set_warm
+    mode: single
+    alias: AC set warm
+    icon: mdi:hvac
+
+automation AC_control:
+  - alias: Set AC cooling mode
+    description: Cool the server room when air temperature is above 25
+    trigger:
+    - platform: numeric_state
+      entity_id: sensor.ir_ac_temperature
+      above: '25'
+    action:
+    - service: script.ac_set_cool
+    mode: single
+
+  - alias: Set AC normal operation
+    trigger:
+    - platform: numeric_state
+      entity_id: sensor.ir_ac_temperature
+      below: '25'
+    action:
+    - service: script.ac_set_normal
+    mode: single
+ 
+automation sonoff_update:
+  - alias: Update power consumption
+    trigger:
+    - platform: time_pattern
+      seconds: '0'
+    action:
+    - service: sonoff.update_consumption
+    mode: single
+    
+automation AC_rotation:
+  - alias: AC rotation (left, ON)
+    description: Rotation of ACs in usage
+    trigger:
+    - platform: time
+      at: '00:00'
+    action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_00
+    mode: single
+
+  - alias: AC rotation (left, OFF)
+    description: Rotation of ACs in usage
+    trigger:
+    - platform: time
+      at: '16:00'
+    action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.sonoff_00
+    mode: single
+
+  - alias: AC rotation (mid, ON)
+    description: Rotation of ACs in usage
+    trigger:
+    - platform: time
+      at: '16:00'
+    action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_01
+    mode: single
+
+  - alias: AC rotation (mid, OFF)
+    description: Rotation of ACs in usage
+    trigger:
+    - platform: time
+      at: '08:00'
+    action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.sonoff_01
+    mode: single
+
+  - alias: AC rotation (right, ON)
+    description: Rotation of ACs in usage
+    trigger:
+    - platform: time
+      at: '08:00'
+    action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.sonoff_02
+    mode: single
+
+  - alias: AC rotation (right, OFF)
+    description: Rotation of ACs in usage
+    trigger:
+    - platform: time
+      at: '00:00'
+    action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.sonoff_02
+    mode: single

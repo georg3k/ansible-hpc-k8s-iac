@@ -38,6 +38,7 @@
             ZBX_TRENDCACHESIZE: 128M
             ZBX_IPMIPOLLERS: 5
           volumes:
+            - /etc/openldap:/etc/openldap:ro
             - /etc/localtime:/etc/localtime:ro
           ports:
             - "10051:10051"
@@ -83,6 +84,9 @@
     mode: 0600
   when: inventory_hostname in groups.control_nodes
   notify: Restart NGINX
+
+- name: Sync handlers
+  meta: flush_handlers
 
 - name: Wait for ZABBIX to startup
   local_action:
@@ -288,10 +292,12 @@
   dnf:
     name: ['gcc-toolset-11', 'python3-devel', 'openldap-devel']
     state: latest
+  when: inventory_hostname in groups.control_nodes
 
 - name: Install ZABBIX LDAP sync script pip dependencies
   pip:
     name: 'python-ldap'
+  when: inventory_hostname in groups.control_nodes
 
 - name: Copy ZABBIX LDAP sync script
   copy:
@@ -314,3 +320,4 @@
     user: root
     job: "/root/zabbix-ldap-sync.py"
     cron_file: zabbix_ldap
+  when: inventory_hostname in groups.control_nodes

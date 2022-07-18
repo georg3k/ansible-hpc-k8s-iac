@@ -39,6 +39,9 @@
     mode: 0600
   notify: Restart NGINX
 
+- name: Sync handlers
+  meta: flush_handlers
+
 - name: Copy preconfigured hass data
   synchronize:
     src: hass

@@ -10,3 +10,6 @@ collections:
     
   - name: community.zabbix
     source: https://galaxy.ansible.com
+
+  - name: ansible.netcommon
+    source: https://galaxy.ansible.com

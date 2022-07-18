@@ -138,7 +138,7 @@
     - Restart SSSD
 
 - name: Save LDAP TLS certificate
-  shell: openssl s_client -connect ldap.example.com:636 -showcerts > /etc/openldap/certs/ca.crt & sleep 2
+  shell: echo -n | openssl s_client -connect {{ control_aliases.ldap }}.{{ domain_name }}:636 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > /etc/openldap/certs/ca.crt & sleep 2
   args:
     creates: /etc/openldap/certs/ca.crt
   notify:
@@ -240,3 +240,6 @@
     mode: 0600
   when: inventory_hostname in groups.control_nodes
   notify: Restart NGINX
+
+- name: Sync handlers
+  meta: flush_handlers
