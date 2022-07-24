@@ -10,30 +10,45 @@
                     "title": "Home",
                     "cards": [
                         {
-                            "type": "entities",
-                            "entities": [
+                            "type": "horizontal-stack",
+                            "cards": [
                                 {
-                                    "entity": "sensor.ir_ac_temperature"
+                                    "type": "button",
+                                    "tap_action": {
+                                        "action": "toggle"
+                                    },
+                                    "entity": "script.ac_turn_off",
+                                    "icon": "mdi:power",
+                                    "name": "ON/OFF"
                                 },
                                 {
-                                    "entity": "sensor.ir_ac_humidity"
+                                    "type": "button",
+                                    "tap_action": {
+                                        "action": "toggle"
+                                    },
+                                    "entity": "script.ac_set_cool",
+                                    "icon": "mdi:snowflake",
+                                    "name": "Cool"
                                 },
                                 {
-                                    "entity": "script.ac_turn_off"
+                                    "type": "button",
+                                    "tap_action": {
+                                        "action": "toggle"
+                                    },
+                                    "entity": "script.ac_set_normal",
+                                    "icon": "mdi:sun-snowflake",
+                                    "name": "Normal"
                                 },
                                 {
-                                    "entity": "script.ac_set_cool"
-                                },
-                                {
-                                    "entity": "script.ac_set_normal"
-                                },
-                                {
-                                    "entity": "script.ac_set_warm"
+                                    "type": "button",
+                                    "tap_action": {
+                                        "action": "toggle"
+                                    },
+                                    "entity": "script.ac_set_warm",
+                                    "icon": "mdi:brightness-7",
+                                    "name": "Warm"
                                 }
-                            ],
-                            "title": "AC control",
-                            "show_header_toggle": true,
-                            "state_color": false
+                            ]
                         },
                         {
                             "type": "vertical-stack",
@@ -75,21 +90,132 @@
                                     "entity": "switch.sonoff_02"
                                 },
                                 {
-                                    "type": "sensor",
-                                    "entity": "sensor.today_consumption_left",
-                                    "graph": "line"
+                                    "type": "gauge",
+                                    "entity": "sensor.current_left",
+                                    "min": 0,
+                                    "max": 20,
+                                    "needle": true,
+                                    "severity": {
+                                        "green": 0,
+                                        "yellow": 10,
+                                        "red": 15
+                                    }
+                                },
+                                {
+                                    "type": "gauge",
+                                    "entity": "sensor.current_mid",
+                                    "min": 0,
+                                    "needle": true,
+                                    "severity": {
+                                        "green": 0,
+                                        "yellow": 10,
+                                        "red": 16
+                                    },
+                                    "max": 20
+                                },
+                                {
+                                    "type": "gauge",
+                                    "entity": "sensor.current_right",
+                                    "min": 0,
+                                    "max": 20,
+                                    "severity": {
+                                        "green": 0,
+                                        "yellow": 10,
+                                        "red": 15
+                                    },
+                                    "needle": true
                                 },
                                 {
                                     "type": "sensor",
-                                    "entity": "sensor.today_consumption_mid",
-                                    "graph": "line"
+                                    "entity": "sensor.power_left",
+                                    "graph": "line",
+                                    "detail": 1,
+                                    "icon": "mdi:lightning-bolt-outline"
                                 },
                                 {
                                     "type": "sensor",
-                                    "entity": "sensor.today_consumption_right",
-                                    "graph": "line"
+                                    "entity": "sensor.power_mid",
+                                    "graph": "line",
+                                    "icon": "mdi:lightning-bolt-outline"
+                                },
+                                {
+                                    "type": "sensor",
+                                    "entity": "sensor.power_right",
+                                    "graph": "line",
+                                    "icon": "mdi:lightning-bolt-outline"
                                 }
                             ]
+                        },
+                        {
+                            "type": "entities",
+                            "entities": [
+                                {
+                                    "entity": "automation.set_ac_cooling_mode",
+                                    "icon": "mdi:snowflake",
+                                    "name": "Automatic cooling",
+                                    "secondary_info": "last-triggered"
+                                },
+                                {
+                                    "entity": "automation.set_ac_normal_operation",
+                                    "name": "Automatic return to normal operation",
+                                    "secondary_info": "last-triggered",
+                                    "icon": "mdi:check-decagram"
+                                },
+                                {
+                                    "entity": "automation.ac_rotation_left_on",
+                                    "icon": "mdi:air-conditioner",
+                                    "name": "Automatic AC rotation (left AC, up)",
+                                    "secondary_info": "last-triggered"
+                                },
+                                {
+                                    "entity": "automation.ac_rotation_left_off",
+                                    "name": "Automatic AC rotation (left AC, down)",
+                                    "secondary_info": "last-triggered",
+                                    "icon": "mdi:air-conditioner"
+                                },
+                                {
+                                    "entity": "automation.ac_rotation_mid_on",
+                                    "name": "Automatic AC rotation (mid AC, up)",
+                                    "secondary_info": "last-triggered",
+                                    "icon": "mdi:air-conditioner"
+                                },
+                                {
+                                    "entity": "automation.ac_rotation_mid_off",
+                                    "name": "Automatic AC rotation (left AC, down)",
+                                    "secondary_info": "last-triggered",
+                                    "icon": "mdi:air-conditioner"
+                                },
+                                {
+                                    "entity": "automation.ac_rotation_right_on",
+                                    "name": "Automatic AC rotation (right AC, up)",
+                                    "icon": "mdi:air-conditioner",
+                                    "secondary_info": "last-triggered"
+                                },
+                                {
+                                    "entity": "automation.ac_rotation_right_off",
+                                    "name": "Automatic AC rotation (left AC, down)",
+                                    "icon": "mdi:air-conditioner",
+                                    "secondary_info": "last-triggered"
+                                }
+                            ],
+                            "title": "Automations"
+                        },
+                        {
+                            "type": "history-graph",
+                            "entities": [
+                                {
+                                    "entity": "switch.sonoff_1000fd075e"
+                                },
+                                {
+                                    "entity": "switch.sonoff_1000fd0042"
+                                },
+                                {
+                                    "entity": "switch.sonoff_1000fd0781"
+                                }
+                            ],
+                            "hours_to_show": 24,
+                            "refresh_interval": 0,
+                            "title": "AC rotation graph"
                         }
                     ]
                 }
