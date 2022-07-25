@@ -1,4 +1,4 @@
 BASE        {{ domain_ldap }}
 URI         ldaps://{{ control_aliases.ldap }}.{{ domain_name }}
-TLS_REQCERT demand
+TLS_REQCERT allow
 TLS_CACERT  /etc/openldap/certs/ca.crt

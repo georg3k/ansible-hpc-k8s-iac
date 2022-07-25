@@ -138,7 +138,7 @@
     - Restart SSSD
 
 - name: Save LDAP TLS certificate
-  shell: echo -n | openssl s_client -connect {{ control_aliases.ldap }}.{{ domain_name }}:636 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > /etc/openldap/certs/ca.crt & sleep 2
+  shell: openssl s_client -connect {{ control_aliases.ldap }}.{{ domain_name }}:636 2>&1 < /dev/null | sed -n '/-----BEGIN/,/-----END/p' > /etc/openldap/certs/ca.crt
   args:
     creates: /etc/openldap/certs/ca.crt
   notify:
