@@ -8,7 +8,7 @@ SyslogFacility AUTHPRIV
 IgnoreRhosts no
 
 PermitRootLogin no
-PasswordAuthentication yes #!
+PasswordAuthentication no
 ChallengeResponseAuthentication no
 
 PubkeyAuthentication yes
@@ -31,5 +31,5 @@ HostbasedAuthentication yes
 HostbasedAcceptedKeyTypes ssh-rsa
 UseDNS yes
 
-Match Host *.example.com
+Match Host *.smcm.space
     PermitRootLogin yes
