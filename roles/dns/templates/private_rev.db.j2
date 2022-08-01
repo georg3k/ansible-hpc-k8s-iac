@@ -30,3 +30,11 @@ $TTL 1m
     | ipaddr('prefix')) / 8) | int)]
     | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.{{ domain_name }}. 
 {% endfor %}
+{% for host in groups["nas"] %}
+{{ "%-3s" | format ((networks.private.cidr
+    | ipaddr('address')
+    | ipmath(groups["nas"].index(host) + 60)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.private.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.{{ domain_name }}. 
+{% endfor %}

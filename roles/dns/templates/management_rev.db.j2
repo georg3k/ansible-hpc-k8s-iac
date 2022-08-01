@@ -30,3 +30,27 @@ $TTL 1m
     | ipaddr('prefix')) / 8) | int)]
     | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.management.{{ domain_name }}. 
 {% endfor %}
+{% for host in groups["ups"] %}
+{{ "%-3s" | format ((networks.management.cidr
+    | ipaddr('address')
+    | ipmath(groups["ups"].index(host) + 70)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.management.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.management.{{ domain_name }}. 
+{% endfor %}
+{% for host in groups["cisco_switches"] %}
+{{ "%-3s" | format ((networks.management.cidr
+    | ipaddr('address')
+    | ipmath(groups["cisco_switches"].index(host) + 80)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.management.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.management.{{ domain_name }}. 
+{% endfor %}
+{% for host in groups["mellanox_switches"] %}
+{{ "%-3s" | format ((networks.management.cidr
+    | ipaddr('address')
+    | ipmath(groups["mellanox_switches"].index(host) + 90)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.management.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.management.{{ domain_name }}. 
+{% endfor %}

@@ -69,7 +69,7 @@
 - name: Start and enable slurm services on control node
   service:
     name: "{{ item }}"
-    state: started
+    state: restarted
     enabled: yes
   with_items:
     - slurmctld
@@ -80,7 +80,7 @@
 - name: Start and enable slurm on cluster node
   service:
     name: slurmd
-    state: started
+    state: restarted
     enabled: yes
   when: inventory_hostname in groups.gpu_nodes
 
