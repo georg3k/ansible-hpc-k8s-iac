@@ -1,0 +1,27 @@
+---
+
+- name: Install chrony
+  dnf:
+    name: apcupsd
+    state: latest
+
+- name: Generate apcupsd.conf template
+  template:
+    src: apcupsd.conf.j2
+    dest: /etc/apcupsd.conf
+  notify: Restart apcupsd
+
+- name: Allow NTP traffic
+  ansible.posix.firewalld:
+    port: apcupsd
+    zone: private
+    permanent: yes
+    state: enabled
+  when: inventory_hostname in groups.control_nodes
+  notify: Reload firewalld
+
+- name: Start and enable chrony
+  service:
+    name: apcupsd
+    state: started
+    enabled: true

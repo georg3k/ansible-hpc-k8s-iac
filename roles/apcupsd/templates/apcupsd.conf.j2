@@ -1,0 +1,31 @@
+UPSNAME MAIN_UPS
+UPSTYPE snmp
+{% if ansible_hostname in groups["control_nodes"] %}  
+DEVICE apc-1:161:APC:private
+{% else %}
+DEVICE {{ control_aliases.main }}.{{ domain_name }}:3551
+{% endif %}
+POLLTIME 30
+LOCKFILE /var/lock
+SCRIPTDIR /etc/apcupsd
+PWRFAILDIR /etc/apcupsd
+NOLOGINDIR /etc
+ONBATTERYDELAY 150
+BATTERYLEVEL 50
+MINUTES 10
+TIMEOUT 0
+ANNOY 600
+ANNOYDELAY 60
+NOLOGON disable
+KILLDELAY 0
+NETSERVER on
+NISIP {{ networks.private.cidr | ipaddr('network') }}
+NISPORT 3551
+EVENTSFILE /var/log/apcupsd.events
+EVENTSFILEMAX 10
+UPSCLASS standalone
+UPSMODE disable
+STATTIME 0
+STATFILE /var/log/apcupsd.status
+LOGSTATS off
+DATATIME 0

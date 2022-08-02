@@ -1,0 +1,4 @@
+---
+
+interfaces:
+  - { name: "eth0", type: "ethernet", mac: "04:20:00:00:00:01", subnet: "private" }

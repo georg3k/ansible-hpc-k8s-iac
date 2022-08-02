@@ -1,0 +1,6 @@
+---
+
+- name: CISCO switches setup
+  hosts: cisco_switches
+  roles:
+  - cisco_switch

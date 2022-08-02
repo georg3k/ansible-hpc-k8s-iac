@@ -1,0 +1,34 @@
+---
+
+- name: Create VLANs
+  ios_vlans:
+    config:
+    - name: "{{ item.name }}"
+      vlan_id: "{{ item.id }}"
+    state: merged
+  with_items:
+    - "{{ vlans }}"
+
+- name: Manage access mode interfaces
+  ios_command:
+    commands:
+    - configure terminal
+    - "interface {{ item.name }}"
+    - switchport mode access
+    - "switchport access vlan {{ item.vlan }}"
+    - end
+  with_items:
+  - "{{ switched_interfaces }}"
+  when: item.mode == "access"
+
+- name: Manage trunk mode interfaces
+  ios_command:
+    commands:
+    - configure terminal
+    - "interface {{ item.name }}"
+    - switchport mode trunk
+    - "switchport trunk allowed {{ item.allow | join(',') }}"
+    - end
+  with_items:
+  - "{{ switched_interfaces }}"
+  when: item.mode == "trunk"

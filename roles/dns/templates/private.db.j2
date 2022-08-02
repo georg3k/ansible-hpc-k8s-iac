@@ -19,4 +19,7 @@ $TTL 1m
 {% for host in groups["gpu_nodes"] %}
 {{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(host) + 199) }}
 {% endfor %}
+{% for host in groups["nas"] %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["nas"].index(host) + 60) }}
+{% endfor %}
 

@@ -1,0 +1,48 @@
+---
+
+interfaces:
+  - { name: "management", type: "ethernet", mac: "03:00:00:00:00:01", subnet: "management" }
+
+vlans:
+  - { name: "default",    id: "1" }
+  - { name: "management", id: "2" }
+
+switched_interfaces:
+  # GPU nodes
+- { name: "Gi1/0/1",  mode: "access", vlan: "1" }
+- { name: "Gi1/0/3",  mode: "access", vlan: "1" }
+- { name: "Gi1/0/5",  mode: "access", vlan: "1" }
+- { name: "Gi1/0/7",  mode: "access", vlan: "1" }
+  # CPU nodes
+- { name: "Gi1/0/9",  mode: "access", vlan: "1" }
+- { name: "Gi1/0/11", mode: "access", vlan: "1" }
+  # ---
+- { name: "Gi1/0/13", mode: "access", vlan: "1" }
+- { name: "Gi1/0/15", mode: "access", vlan: "1" }
+- { name: "Gi1/0/17", mode: "access", vlan: "1" }
+- { name: "Gi1/0/19", mode: "access", vlan: "1" }
+- { name: "Gi1/0/21", mode: "access", vlan: "1" }
+- { name: "Gi1/0/23", mode: "access", vlan: "1" }
+  # ---
+- { name: "Gi1/0/25", mode: "access", vlan: "1" }
+- { name: "Gi1/0/27", mode: "access", vlan: "1" }
+- { name: "Gi1/0/29", mode: "access", vlan: "1" }
+- { name: "Gi1/0/31", mode: "access", vlan: "1" }
+- { name: "Gi1/0/33", mode: "access", vlan: "1" }
+- { name: "Gi1/0/35", mode: "access", vlan: "1" }
+  # ---
+- { name: "Gi1/0/37", mode: "access", vlan: "1" }
+- { name: "Gi1/0/39", mode: "access", vlan: "1" }
+- { name: "Gi1/0/41", mode: "access", vlan: "1" }
+- { name: "Gi1/0/43", mode: "access", vlan: "1" }
+- { name: "Gi1/0/45", mode: "access", vlan: "1" }
+- { name: "Gi1/0/47", mode: "access", vlan: "1" }
+  # Goes to cisco-1
+- { name: "Gi1/0/2",  mode: "trunk",  allow: ["1", "2"] }
+
+#- { name: "Gi1/0/4",  mode: "trunk",  allow: ["1", "2"] }
+#- { name: "Gi1/0/6",  mode: "access", vlan: "1" }
+#- { name: "Gi1/0/8",  mode: "access", vlan: "1" }
+#- { name: "Gi1/0/46", mode: "trunk",  allow: ["1", "2"] }
+#- { name: "Te1/0/1",  mode: "access", vlan: "1" }
+#- { name: "Te1/0/2",  mode: "access", vlan: "1" }
