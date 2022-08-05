@@ -1,8 +1,8 @@
 ---
 
-- name: Install NFS
+- name: Install NFS and iSCSI
   dnf:
-    name: nfs-utils
+    name: ['nfs-utils', 'iscsi-initiator-utils']
     state: latest
   
 - name: Create iSCSI mount directory
@@ -10,9 +10,28 @@
     path: /export
     state: directory
   when: inventory_hostname in groups.control_nodes
-  
-# TODO: Mount iSCSI drive to /iscsi
-  
+
+- name: Discover default NAS target
+  open_iscsi:
+    show_nodes: yes
+    discover: yes
+    portal: "{{ groups.nas[0] }}.{{ domain_name }}"
+  register: discovery
+  when: inventory_hostname in groups.control_nodes
+
+- name: Login to discovered target
+  open_iscsi:
+    login: yes
+    target: "{{ discovery.nodes[0] }}"
+  register: device
+  when: inventory_hostname in groups.control_nodes
+
+- name: Mount
+  ansible.posix.mount:
+    path: /export
+    src: "{{ device.devicenodes[0] }}"
+  when: inventory_hostname in groups.control_nodes
+
 - name: Ensure existance of home directory
   file:
     path: /export/home
