@@ -70,13 +70,22 @@ host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
 {% endfor %}
 {% endfor %}
 {% for host in groups["nas"] %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "ethernet")) %}
+
+host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
+    hardware ethernet {{ intf.mac }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 89) }};
+}
+
+{% endfor %}
+{% endfor %}
+{% for host in groups["nas"] %}
 {% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "management")) %}
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 60) }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 94) }};
 }
-
 {% endfor %}
 {% endfor %}
 {% for host in groups["ups"] %}
@@ -84,7 +93,7 @@ host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 70) }};
+    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 89) }};
 }
 
 {% endfor %}
@@ -94,7 +103,7 @@ host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 80) }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 79) }};
 }
 
 {% endfor %}
@@ -104,7 +113,7 @@ host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 90) }};
+    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 79) }};
 }
 
 {% endfor %}

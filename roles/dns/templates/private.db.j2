@@ -20,6 +20,12 @@ $TTL 1m
 {{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(host) + 199) }}
 {% endfor %}
 {% for host in groups["nas"] %}
-{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["nas"].index(host) + 60) }}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["nas"].index(host) + 89) }}
+{% endfor %}
+{% for host in groups["nas"] %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }}-mgmt IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["nas"].index(host) + 94) }}
+{% endfor %}
+{% for host in groups["cisco_switches"] %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 79) }}
 {% endfor %}
 
