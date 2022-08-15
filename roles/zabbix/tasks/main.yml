@@ -184,6 +184,38 @@
     status: enabled
   when: inventory_hostname in groups.control_nodes
 
+- name: Create ZABBIX discovery rule for web cluster IPMI interfaces
+  community.zabbix.zabbix_discovery_rule:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Web cluster IPMI"
+    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(99) }}-{{ [(networks.management.cidr | ipaddr('address')).split('.')[3] | int + 198, 254] | min }}"
+    dchecks:
+        - type: Zabbix
+          key: "system.hostname"
+          name_source: DNS
+          ports: '10050'
+    state: present
+    status: enabled
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX discovery rule for web compute IPMI interfaces
+  community.zabbix.zabbix_discovery_rule:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Compute cluster IPMI"
+    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(199) }}-{{ [(networks.management.cidr | ipaddr('address')).split('.')[3] | int + 299, 254] | min }}"
+    dchecks:
+        - type: Zabbix
+          key: "system.hostname"
+          name_source: DNS
+          ports: '10050'
+    state: present
+    status: enabled
+  when: inventory_hostname in groups.control_nodes
+
 - name: Create discovery action for web cluster
   community.zabbix.zabbix_action:
     server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
@@ -230,6 +262,54 @@
         templates: 'Linux by Zabbix agent'
       - type: add_to_host_group
         host_groups: 'Compute cluster nodes'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create discovery action for web cluster IPMI interfaces
+  community.zabbix.zabbix_action:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Web cluster IPMI group"
+    event_source: 'discovery'
+    state: present
+    status: enabled
+    esc_period: '60'
+    conditions:
+      - type: 'discovery_rule'
+        operator: '='
+        value: 'Web cluster IPMI'
+      - type: 'discovered_service_type'
+        operator: '='
+        value: 'Zabbix agent'
+    operations:
+      - type: add_host
+        templates: 'Linux by Zabbix agent'
+      - type: add_to_host_group
+        host_groups: 'Web cluster nodes'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create discovery action for compute cluster IPIM interfaces
+  community.zabbix.zabbix_action:
+    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Compute cluster IPMI group"
+    event_source: 'discovery'
+    state: present
+    status: enabled
+    esc_period: '60'
+    conditions:
+      - type: 'discovery_rule'
+        operator: '='
+        value: 'Compute cluster IPMI'
+      - type: 'discovered_service_type'
+        operator: '='
+        value: 'Zabbix agent'
+    operations:
+      - type: add_host
+        templates: 'Linux by Zabbix agent'
+      - type: add_to_host_group
+        host_groups: 'Web cluster nodes'
   when: inventory_hostname in groups.control_nodes
 
 - name: Setup ZABBIX Telegram bot
