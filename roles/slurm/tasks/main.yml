@@ -69,7 +69,7 @@
 - name: Start and enable slurm services on control node
   service:
     name: "{{ item }}"
-    state: restarted
+    state: started
     enabled: yes
   with_items:
     - slurmctld
