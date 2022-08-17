@@ -28,14 +28,14 @@
             network_mode: host
             restart: always
             command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-#        certbot:
-#            image: certbot/certbot:stable
-#            container_name: certbot
-#            volumes:
-#                - /docker/certbot/conf:/etc/letsencrypt
-#                - /docker/certbot/www:/var/www/certbot
-#                - /etc/localtime:/etc/localtime:ro
-#            entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+        certbot:
+            image: certbot/certbot:latest
+            container_name: certbot
+            volumes:
+                - /docker/certbot/conf:/etc/letsencrypt
+                - /docker/certbot/www:/var/www/certbot
+                - /etc/localtime:/etc/localtime:ro
+            entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 - name: Allow HTTPS traffic
   ansible.posix.firewalld:
@@ -48,12 +48,5 @@
     - https
   notify: Reload firewalld
 
-#- name: Generate NGINX certbot template
-#  template:
-#    src: certbot.conf.j2
-#    dest: /docker/nginx/sites-enabled/certbot.conf
-#    mode: 0600
-#  notify: Restart NGINX
-
-#- name: Sync handlers
-#  meta: flush_handlers
+- name: Sync handlers
+  meta: flush_handlers

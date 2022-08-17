@@ -1,11 +1,24 @@
 server {
+    listen 80;
+    server_name {{ external_subdomains.lam }}.{{ domain_name }};
+    
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
     server_name {{ external_subdomains.gitlab }}.{{ domain_name }};
     location / {
         proxy_pass http://localhost:4001;
     }
-    listen 80; #443 ssl;
-#    ssl_certificate /docker/certbot/letsencrypt/live/{{ external_subdomains.gitlab }}.{{ domain_name }}/fullchain.pem;
-#    ssl_certificate_key /docker/certbot/letsencrypt/live/{{ external_subdomains.gitlab }}.{{ domain_name }}/privkey.pem;
-#    include /docker/certbot/letsencrypt/options-ssl-nginx.conf;
-#    ssl_dhparam /docker/certbot/letsencrypt/ssl-dhparams.pem;
+    listen 443 ssl;
+    ssl_certificate /docker/certbot/letsencrypt/live/{{ external_subdomains.gitlab }}.{{ domain_name }}/fullchain.pem;
+    ssl_certificate_key /docker/certbot/letsencrypt/live/{{ external_subdomains.gitlab }}.{{ domain_name }}/privkey.pem;
+    include /docker/certbot/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /docker/certbot/letsencrypt/ssl-dhparams.pem;
 }
