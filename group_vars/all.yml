@@ -64,8 +64,8 @@ ansible_user: root
 ansible_ssh_pass: '{{ root_passwd }}'
 
 # Linux distribution to install via PXE (RHEL family distro expected)
-distro_url: 'https://mirror.yandex.ru/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20220104-dvd1.iso'
-distro_chk: '296aa0829e1fa43ca3c16f93927d3b76b902adc3602cad532d45793896b6f943'
+distro_url: 'https://mirror.yandex.ru/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20220506-dvd1.iso'
+distro_chk: '8f55ffa743193c79aea89f0c52b0a0087092f9516f1962c54cd29e0a0e472b4d'
 
 # Geo data
 gps_latitude: 50
