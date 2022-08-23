@@ -3,10 +3,11 @@
 Host *
     EnableSSHKeySign yes
     HostbasedAuthentication yes
-    UserKnownHostsFile no
+    UserKnownHostsFile /dev/null
     StrictHostKeyChecking no
     NoHostAuthenticationForLocalhost yes
     HostbasedKeyTypes ssh-rsa
     CheckHostIP no
+    KexAlgorithms=+diffie-hellman-group1-sha1
 
 Include /etc/ssh/ssh_config.d/*.conf
