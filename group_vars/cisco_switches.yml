@@ -8,7 +8,7 @@ ansible_become: "yes"
 ansible_become_method: enable
 
 # CISCO user password
-cisco_password: '{{ readonly_password }}'
+ansible_ssh_pass: '{{ readonly_password }}'
 
 # CISCO enable password
 ansible_become_password: '{{ admin_password }}'
