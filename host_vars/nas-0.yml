@@ -1,5 +1,5 @@
 ---
 
 interfaces:
-  - { name: "eth0", type: "ethernet", mac: "04:10:00:00:00:00", subnet: "private" }
-  - { name: "eth1", type: "ethernet", mac: "04:10:00:00:00:01", subnet: "private" }
+  - { name: "iscsi-0",    type: "ethernet", mac: "04:10:00:00:00:00", subnet: "private" }
+  - { name: "management", type: "ethernet", mac: "04:10:00:00:00:01", subnet: "private" }
