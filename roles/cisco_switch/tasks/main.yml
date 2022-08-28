@@ -27,7 +27,6 @@
     - configure terminal
     - "interface {{ item.name }}"
     - switchport mode trunk
-    - "switchport trunk allowed {{ item.allow | join(',') }}"
     - end
   with_items:
   - "{{ switched_interfaces }}"

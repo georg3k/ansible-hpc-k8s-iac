@@ -20,6 +20,13 @@ $TTL 1m
 {{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(host) + 199) }}
 {% endfor %}
 {% for host in groups["nas"] %}
-{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["nas"].index(host) + 60) }}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "private")) %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname + '-' + intf.name) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["nas"].index(host) + loop.index0 + 69) }}
 {% endfor %}
-
+{% endfor %}
+{% for host in groups["cisco_switches"] %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 79) }}
+{% endfor %}
+{% for host in groups["mellanox_switches"] %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["mellanox_switches"].index(host) + 89) }}
+{% endfor %}

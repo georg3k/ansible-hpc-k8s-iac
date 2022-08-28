@@ -20,11 +20,5 @@ $TTL 1m
 {{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(host) + 199) }}
 {% endfor %}
 {% for host in groups["ups"] %}
-{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["ups"].index(host) + 70) }}
-{% endfor %}
-{% for host in groups["cisco_switches"] %}
-{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 80) }}
-{% endfor %}
-{% for host in groups["mellanox_switches"] %}
-{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["mellanox_switches"].index(host) + 90) }}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["ups"].index(host) + 89) }}
 {% endfor %}

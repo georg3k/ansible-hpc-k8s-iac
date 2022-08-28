@@ -15,7 +15,7 @@
   open_iscsi:
     show_nodes: yes
     discover: yes
-    portal: "{{ groups.nas[0] }}.{{ domain_name }}"
+    portal: "{{ (networks.private.cidr | ipaddr('address')) | ipmath(69) }}"
   register: discovery
   when: inventory_hostname in groups.control_nodes
 
@@ -26,25 +26,51 @@
   register: device
   when: inventory_hostname in groups.control_nodes
 
-- name: Mount
-  ansible.posix.mount:
-    path: /export
-    src: "{{ device.devicenodes[0] }}"
-  when: inventory_hostname in groups.control_nodes
+#- name: Mount
+#  ansible.posix.mount:
+#    path: /export
+#    src: "{{ device.devicenodes[0] }}"
+#    opts: _netdev,rw
+#    fstype: ext4
+#    boot: yes
+#    state: mounted
+#  when: inventory_hostname in groups.control_nodes
 
 - name: Ensure existance of home directory
   file:
     path: /export/home
     state: directory
+    mode: 0755
+  when: inventory_hostname in groups.control_nodes
+
+- name: Ensure existance of shared directory
+  file:
+    path: /export/shared
+    state: directory
+    mode: 0777
+  when: inventory_hostname in groups.control_nodes
+
+- name: Ensure existance of software directory
+  file:
+    path: /export/software
+    state: directory
+    mode: 0755
   when: inventory_hostname in groups.control_nodes
 
 - name: Add NFS exports
   lineinfile:
     path: /etc/exports
-    regexp: "^/export/home.*"
-    line: "/export/home\t{{ networks.private.cidr }}(rw,sync,no_root_squash)"
+    regexp: "^/export/{{ item }}.*"
+    line: "/export/{{ item }}\t{{ networks.private.cidr }}(rw,sync,no_root_squash)"
+  with_items:
+    - home
+    - software
+    - shared
   when: inventory_hostname in groups.control_nodes
   notify: Update NFS exports
+
+- name: Sync handlers
+  meta: flush_handlers
   
 - name: Allow NFS traffic
   ansible.posix.firewalld:
@@ -61,14 +87,25 @@
     state: started
     enabled: true
   when: inventory_hostname in groups.control_nodes
-  
+
+- name: Ensure existance of NFS mount directories
+  file:
+    path: /{{ item }}
+    state: directory
+  with_items:
+    - home
+    - software
+    - shared
+
 - name: Mount NFS share
   ansible.posix.mount:
-    path: /home
-    src: "{{ control_aliases.nfs }}.{{ domain_name }}:/export/home"
+    path: /{{ item }}
+    src: "{{ control_aliases.nfs }}.{{ domain_name }}:/export/{{ item }}"
     opts: rw,sync,hard
     fstype: nfs
     boot: yes
     state: mounted
-   
-  
+  with_items:
+    - home
+    - software
+    - shared

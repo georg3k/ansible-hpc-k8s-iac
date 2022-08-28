@@ -15,7 +15,7 @@ subnet {{ networks.private.cidr | ipaddr('network') }} netmask {{ networks.priva
     option broadcast-address {{ networks.private.cidr | ipaddr('broadcast') }};
     option routers {{ networks.private.cidr | ipaddr('address') }};
     option domain-name "{{ domain_name }}";
-    option domain-name-servers {{ networks.private.cidr | ipaddr('address') }};
+    option domain-name-servers {{ networks.private.cidr | ipaddr('address') }}; 
 }
 
 # Management subnet declaration
@@ -70,41 +70,41 @@ host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
 {% endfor %}
 {% endfor %}
 {% for host in groups["nas"] %}
-{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "management")) %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "private")) %}
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["nas"].index(host) + 60) }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["nas"].index(host) + loop.index0 + 69) }};
 }
 
 {% endfor %}
 {% endfor %}
 {% for host in groups["ups"] %}
-{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "management")) %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "private")) %}
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["ups"].index(host) + 70) }};
+    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["ups"].index(host) + 89) }};
 }
 
 {% endfor %}
 {% endfor %}
 {% for host in groups["cisco_switches"] %}
-{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "management")) %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "private")) %}
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 80) }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 79) }};
 }
 
 {% endfor %}
 {% endfor %}
 {% for host in groups["mellanox_switches"] %}
-{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "management")) %}
+{% for intf in hostvars[host].interfaces if ((intf.type == 'ethernet') and (intf.subnet == "private")) %}
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cisco_switches"].index(host) + 90) }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["mellanox_switches"].index(host) + 89) }};
 }
 
 {% endfor %}

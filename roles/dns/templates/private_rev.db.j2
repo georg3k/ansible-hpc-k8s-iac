@@ -33,7 +33,23 @@ $TTL 1m
 {% for host in groups["nas"] %}
 {{ "%-3s" | format ((networks.private.cidr
     | ipaddr('address')
-    | ipmath(groups["nas"].index(host) + 60)
+    | ipmath(groups["nas"].index(host) + loop.index0 + 69)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.private.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.{{ domain_name }}. 
+{% endfor %}
+{% for host in groups["cisco_switches"] %}
+{{ "%-3s" | format ((networks.private.cidr
+    | ipaddr('address')
+    | ipmath(groups["cisco_switches"].index(host) + 79)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.private.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.{{ domain_name }}. 
+{% endfor %}
+{% for host in groups["mellanox_switches"] %}
+{{ "%-3s" | format ((networks.private.cidr
+    | ipaddr('address')
+    | ipmath(groups["mellanox_switches"].index(host) + 89)
     | ipaddr('revdns')).split('.')[0 : 4 - (((networks.private.cidr
     | ipaddr('prefix')) / 8) | int)]
     | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.{{ domain_name }}. 
