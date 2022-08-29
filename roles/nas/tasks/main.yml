@@ -26,15 +26,15 @@
   register: device
   when: inventory_hostname in groups.control_nodes
 
-#- name: Mount
-#  ansible.posix.mount:
-#    path: /export
-#    src: "{{ device.devicenodes[0] }}"
-#    opts: _netdev,rw
-#    fstype: ext4
-#    boot: yes
-#    state: mounted
-#  when: inventory_hostname in groups.control_nodes
+- name: Mount
+  ansible.posix.mount:
+    path: /export
+    src: "{{ device.devicenodes[0] }}"
+    opts: _netdev,rw
+    fstype: ext4
+    boot: yes
+    state: mounted
+  when: inventory_hostname in groups.control_nodes
 
 - name: Ensure existance of home directory
   file:
