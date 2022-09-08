@@ -19,8 +19,8 @@ server {
         proxy_set_header Connection "upgrade";
     }
     listen 443 ssl;
-    ssl_certificate /docker/certbot/letsencrypt/live/{{ external_subdomains.hass }}.{{ domain_name }}/fullchain.pem;
-    ssl_certificate_key /docker/certbot/letsencrypt/live/{{ external_subdomains.hass }}.{{ domain_name }}/privkey.pem;
-    include /docker/certbot/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /docker/certbot/letsencrypt/ssl-dhparams.pem;
+    ssl_certificate /etc/letsencrypt/live/{{ external_subdomains.hass }}.{{ domain_name }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ external_subdomains.hass }}.{{ domain_name }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }

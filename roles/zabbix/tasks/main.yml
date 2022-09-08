@@ -102,7 +102,7 @@
 
 - name: Change ZABBIX default password
   community.zabbix.zabbix_user:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: zabbix
     alias: Admin
@@ -118,7 +118,7 @@
 
 - name: Update ZABBIX server host entry
   community.zabbix.zabbix_host:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     host_name: "Zabbix server"
@@ -132,7 +132,7 @@
 
 - name: Create ZABBIX user groups
   community.zabbix.zabbix_usergroup:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "{{ item }}"
@@ -144,7 +144,7 @@
 
 - name: Create ZABBIX host groups
   community.zabbix.zabbix_group:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     host_groups:
@@ -154,7 +154,7 @@
 
 - name: Create ZABBIX discovery rule for web cluster nodes
   community.zabbix.zabbix_discovery_rule:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "Web cluster"
@@ -170,7 +170,7 @@
 
 - name: Create ZABBIX discovery rule for compute cluster nodes
   community.zabbix.zabbix_discovery_rule:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "Compute cluster"
@@ -186,7 +186,7 @@
 
 - name: Create ZABBIX discovery rule for web cluster IPMI interfaces
   community.zabbix.zabbix_discovery_rule:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "Web cluster IPMI"
@@ -202,7 +202,7 @@
 
 - name: Create ZABBIX discovery rule for web compute IPMI interfaces
   community.zabbix.zabbix_discovery_rule:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "Compute cluster IPMI"
@@ -218,7 +218,7 @@
 
 - name: Create discovery action for web cluster
   community.zabbix.zabbix_action:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "Web cluster group"
@@ -242,7 +242,7 @@
 
 - name: Create discovery action for compute cluster
   community.zabbix.zabbix_action:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "Compute cluster group"
@@ -266,7 +266,7 @@
 
 - name: Create discovery action for web cluster IPMI interfaces
   community.zabbix.zabbix_action:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "Web cluster IPMI group"
@@ -290,7 +290,7 @@
 
 - name: Create discovery action for compute cluster IPIM interfaces
   community.zabbix.zabbix_action:
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     name: "Compute cluster IPMI group"
@@ -315,7 +315,7 @@
 - name: Setup ZABBIX Telegram bot
   community.zabbix.zabbix_mediatype:
     name: "Telegram"
-    server_url: "http://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     type: 'webhook'

@@ -31,5 +31,5 @@ HostbasedAuthentication yes
 HostbasedAcceptedKeyTypes ssh-rsa
 UseDNS yes
 
-Match Host *.smcm.space
+Match Host *.example.com
     PermitRootLogin yes
