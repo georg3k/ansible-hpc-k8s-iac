@@ -13,7 +13,7 @@ ChallengeResponseAuthentication no
 
 PubkeyAuthentication yes
 UsePAM yes
-X11Forwarding no
+X11Forwarding yes
 PrintMotd no
 IgnoreRhosts no
 
