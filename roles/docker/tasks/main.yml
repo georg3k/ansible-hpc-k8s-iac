@@ -84,3 +84,12 @@
     fstype: nfs
     boot: yes
     state: mounted
+
+- name: Close external docker ports for public interfaces
+  iptables:
+    chain: DOCKER-USER
+    in_interface: "{{ item.name }}"
+    source: "{{ networks.management.cidr | ipaddr('address') }}"
+    jump: DROP
+  when: item.subnet == "public"
+  with_items: "{{ interfaces }}"

@@ -32,15 +32,15 @@
   when: inventory_hostname in groups.gpu_nodes
   notify: Restart slurm
 
-- name: Install slurm control node suite
+- name: Install slurm control node suite and RDMA (InfiniBand) tools
   dnf:
-    name: ['mailx', 'slurm-slurmctld', 'slurm-slurmdbd', 'slurm-slurmrestd']
+    name: ['mailx', 'slurm-slurmctld', 'slurm-slurmdbd', 'slurm-slurmrestd', 'slurm-pmi', 'librdmacm', 'libibverbs', libibverbs-utils']
     state: latest
   when: inventory_hostname in groups.control_nodes
 
-- name: Install slurm cluster node suite
+- name: Install slurm cluster node suite and RDMA (InfiniBand) tools
   dnf:
-    name: 'slurm-slurmd'
+    name: ['slurm-slurmd', 'librdmacm', 'libibverbs', libibverbs-utils']
     state: latest
   when: inventory_hostname in groups.gpu_nodes
 

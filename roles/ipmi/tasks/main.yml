@@ -1,0 +1,26 @@
+---
+
+- name: Install ipmitool
+  dnf:
+    name: ipmitool
+    state: latest
+
+- name: Get current IPMI settings
+  shell: ipmitool lan print 1
+  register: ipmi_output
+  changed_when: false
+
+- name: Setup IPMI network settings
+  shell: ipmitool lan set 1 ipsrc dhcp
+  when: "IP Address Source       : DHCP Address" not in ipmi_output.stdout
+
+- name: Setup IPMI SNMP community
+  shell: ipmitool lan set 1 snmp hpc
+  when: "SNMP Community String   : hpc" not in ipmi_output.stdout
+
+- name: Create IPMI user
+  shell: |
+    ipmitool user enable 5
+    ipmitool user set name 5 hpc
+    ipmitool user set password 5 "{{ admin_password }}"
+  when: "5   hpc          true    false      false      ADMINISTRATOR" not in ipmi_output.stdout
