@@ -130,18 +130,6 @@
       dns: zabbix_agent
   when: inventory_hostname in groups.control_nodes
 
-- name: Create ZABBIX user groups
-  community.zabbix.zabbix_usergroup:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "{{ item }}"
-    gui_access: LDAP
-  with_items:
-    - Admins
-    - Users
-  when: inventory_hostname in groups.control_nodes
-
 - name: Create ZABBIX host groups
   community.zabbix.zabbix_group:
     server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
@@ -150,6 +138,10 @@
     host_groups:
       - Web cluster nodes
       - Compute cluster nodes
+      - NAS
+      - UPS
+      - CISCO switches
+      - Mellanox switches
   when: inventory_hostname in groups.control_nodes
 
 - name: Create ZABBIX discovery rule for web cluster nodes
@@ -184,34 +176,74 @@
     status: enabled
   when: inventory_hostname in groups.control_nodes
 
-- name: Create ZABBIX discovery rule for web cluster IPMI interfaces
+- name: Create ZABBIX discovery rule for NAS
   community.zabbix.zabbix_discovery_rule:
     server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
-    name: "Web cluster IPMI"
-    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(99) }}-{{ [(networks.management.cidr | ipaddr('address')).split('.')[3] | int + 198, 254] | min }}"
+    name: "NAS"
+    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(69) }}-{{ (networks.management.cidr | ipaddr('address')).split('.')[3] | int + 79 }}"
     dchecks:
-        - type: Zabbix
-          key: "system.hostname"
+        - type: SNMPv2
+          snmp_community: hpc
+          ports: "161"
+          key: iso.3.6.1.2.1.1.1.0
+          uniq: no
           name_source: DNS
-          ports: '10050'
     state: present
     status: enabled
   when: inventory_hostname in groups.control_nodes
 
-- name: Create ZABBIX discovery rule for web compute IPMI interfaces
+- name: Create ZABBIX discovery rule for UPS
   community.zabbix.zabbix_discovery_rule:
     server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
-    name: "Compute cluster IPMI"
-    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(199) }}-{{ [(networks.management.cidr | ipaddr('address')).split('.')[3] | int + 299, 254] | min }}"
+    name: "UPS"
+    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(89) }}-{{ (networks.management.cidr | ipaddr('address')).split('.')[3] | int + 99 }}"
     dchecks:
-        - type: Zabbix
-          key: "system.hostname"
+        - type: SNMPv2
+          snmp_community: hpc
+          ports: "161"
+          key: iso.3.6.1.2.1.1.1.0
+          uniq: no
           name_source: DNS
-          ports: '10050'
+    state: present
+    status: enabled
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX discovery rule for CISCO switches
+  community.zabbix.zabbix_discovery_rule:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "CISCO switches"
+    iprange: "{{ networks.private.cidr | ipaddr('address') | ipmath(79) }}-{{ (networks.private.cidr | ipaddr('address')).split('.')[3] | int + 89 }}"
+    dchecks:
+        - type: SNMPv2
+          snmp_community: hpc
+          ports: "161"
+          key: iso.3.6.1.2.1.1.1.0
+          uniq: no
+          name_source: DNS
+    state: present
+    status: enabled
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX discovery rule for Mellanox switches
+  community.zabbix.zabbix_discovery_rule:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Mellanox switches"
+    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(89) }}-{{ (networks.management.cidr | ipaddr('address')).split('.')[3] | int + 99 }}"
+    dchecks:
+        - type: SNMPv2
+          snmp_community: hpc
+          ports: "161"
+          key: iso.3.6.1.2.1.1.1.0
+          uniq: no
+          name_source: DNS
     state: present
     status: enabled
   when: inventory_hostname in groups.control_nodes
@@ -235,9 +267,16 @@
         value: 'Zabbix agent'
     operations:
       - type: add_host
-        templates: 'Linux by Zabbix agent'
       - type: add_to_host_group
         host_groups: 'Web cluster nodes'
+      - type: link_to_template
+        templates:
+          - 'Linux by Zabbix agent'
+      - type: link_to_template
+        templates:
+          - 'Chassis by IPMI'
+      - type: set_host_inventory_mode
+        inventory: automatic
   when: inventory_hostname in groups.control_nodes
 
 - name: Create discovery action for compute cluster
@@ -259,17 +298,24 @@
         value: 'Zabbix agent'
     operations:
       - type: add_host
-        templates: 'Linux by Zabbix agent'
       - type: add_to_host_group
         host_groups: 'Compute cluster nodes'
+      - type: link_to_template
+        templates:
+          - 'Linux by Zabbix agent'
+      - type: link_to_template
+        templates:
+          - 'Chassis by IPMI'
+      - type: set_host_inventory_mode
+        inventory: automatic
   when: inventory_hostname in groups.control_nodes
 
-- name: Create discovery action for web cluster IPMI interfaces
+- name: Create discovery action for NAS
   community.zabbix.zabbix_action:
     server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
-    name: "Web cluster IPMI group"
+    name: "NAS group"
     event_source: 'discovery'
     state: present
     status: enabled
@@ -277,23 +323,24 @@
     conditions:
       - type: 'discovery_rule'
         operator: '='
-        value: 'Web cluster IPMI'
-      - type: 'discovered_service_type'
-        operator: '='
-        value: 'Zabbix agent'
+        value: 'NAS'
     operations:
       - type: add_host
-        templates: 'Linux by Zabbix agent'
       - type: add_to_host_group
-        host_groups: 'Web cluster nodes'
+        host_groups: 'NAS'
+      - type: link_to_template
+        templates:
+          - 'Generic SNMP' 
+      - type: set_host_inventory_mode
+        inventory: automatic
   when: inventory_hostname in groups.control_nodes
 
-- name: Create discovery action for compute cluster IPIM interfaces
+- name: Create discovery action for UPS
   community.zabbix.zabbix_action:
     server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
-    name: "Compute cluster IPMI group"
+    name: "UPS group"
     event_source: 'discovery'
     state: present
     status: enabled
@@ -301,15 +348,66 @@
     conditions:
       - type: 'discovery_rule'
         operator: '='
-        value: 'Compute cluster IPMI'
-      - type: 'discovered_service_type'
-        operator: '='
-        value: 'Zabbix agent'
+        value: 'UPS'
     operations:
       - type: add_host
-        templates: 'Linux by Zabbix agent'
       - type: add_to_host_group
-        host_groups: 'Web cluster nodes'
+        host_groups: 'UPS'
+      - type: link_to_template
+        templates:
+          - 'APC UPS SNMP'
+      - type: set_host_inventory_mode
+        inventory: automatic
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create discovery action for CISCO switches
+  community.zabbix.zabbix_action:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "CISCO switches group"
+    event_source: 'discovery'
+    state: present
+    status: enabled
+    esc_period: '60'
+    conditions:
+      - type: 'discovery_rule'
+        operator: '='
+        value: 'CISCO switches'
+    operations:
+      - type: add_host
+      - type: add_to_host_group
+        host_groups: 'CISCO switches'
+      - type: link_to_template
+        templates:
+          - 'Cisco IOS SNMP'
+      - type: set_host_inventory_mode
+        inventory: automatic
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create discovery action for Mellanox switches
+  community.zabbix.zabbix_action:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Mellanox switches group"
+    event_source: 'discovery'
+    state: present
+    status: enabled
+    esc_period: '60'
+    conditions:
+      - type: 'discovery_rule'
+        operator: '='
+        value: 'Mellanox switches'
+    operations:
+      - type: add_host
+      - type: add_to_host_group
+        host_groups: 'Mellanox switches'
+      - type: link_to_template
+        templates:
+          - 'Mellanox SNMP' 
+      - type: set_host_inventory_mode
+        inventory: automatic
   when: inventory_hostname in groups.control_nodes
 
 - name: Setup ZABBIX Telegram bot
@@ -331,6 +429,70 @@
         value: '{ALERT.SENDTO}'
       - name: 'Token'
         value: "{{ telegram_token }}"
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX admin user group
+  community.zabbix.zabbix_usergroup:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Admins"
+    gui_access: LDAP
+    rights:
+      - host_group: "Zabbix servers"
+        permission: read-write
+      - host_group: "Web cluster nodes"
+        permission: read-write
+      - host_group: "Compute cluster nodes"
+        permission: read-write
+      - host_group: "UPS"
+        permission: read-write
+      - host_group: "NAS"
+        permission: read-write
+      - host_group: "CISCO switches"
+        permission: read-write
+      - host_group: "Mellanox switches"
+        permission: read-write
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create ZABBIX regular user group
+  community.zabbix.zabbix_usergroup:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Users"
+    gui_access: LDAP
+    rights:
+      - host_group: "Zabbix servers"
+        permission: read-only
+      - host_group: "Web cluster nodes"
+        permission: read-only
+      - host_group: "Compute cluster nodes"
+        permission: read-only
+      - host_group: "UPS"
+        permission: read-only
+      - host_group: "NAS"
+        permission: read-only
+      - host_group: "CISCO switches"
+        permission: read-only
+      - host_group: "Mellanox switches"
+        permission: read-only
+  when: inventory_hostname in groups.control_nodes
+
+- name: Enable messages trigger action
+  community.zabbix.zabbix_action:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    name: "Report problems to administrators"
+    event_source: 'trigger'
+    state: present
+    status: enabled
+    esc_period: '60'
+    operations:
+      - type: send_message
+        send_to_groups:
+          - 'Admins'
   when: inventory_hostname in groups.control_nodes
 
 - name: Install EPEL
