@@ -11,6 +11,7 @@
   - docker
   - auth
   - zabbix
+  - ipmi
 
 - name: Compute cluster setup 
   hosts: gpu_nodes
@@ -24,3 +25,4 @@
   - auth
   - slurm
   - zabbix
+  - ipmi

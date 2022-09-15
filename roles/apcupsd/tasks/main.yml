@@ -11,9 +11,9 @@
     dest: /etc/apcupsd.conf
   notify: Restart apcupsd
 
-- name: Allow NTP traffic
+- name: Allow apcupsd traffic
   ansible.posix.firewalld:
-    port: apcupsd
+    service: apcupsd
     zone: private
     permanent: yes
     state: enabled
