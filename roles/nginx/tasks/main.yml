@@ -10,6 +10,20 @@
   file:
     path: /docker/nginx/sites-enabled
     state: directory
+    
+- name: Ensure existance of certbot live certificates directory
+  file:
+    path: /docker/certbot/conf/live
+    state: directory
+
+- name: Copy default SSL configuration
+  copy:
+    src: "letsencrypt/{{ item }}"
+    dest: /docker/certbot/conf
+    mode: 750
+  with_items:
+  - "options-ssl-nginx.conf"
+  - "ssl-dhparams.pem"
 
 - name: Deploy NGINX
   community.docker.docker_compose:
