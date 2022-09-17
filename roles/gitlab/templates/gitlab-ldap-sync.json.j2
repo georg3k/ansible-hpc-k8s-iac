@@ -2,8 +2,8 @@
   "log": "/var/log/gitlab-ldap-sync.log",
   "log_level": "INFO",
   "gitlab": {
-    "api": "http://{{ external_subdomains.gitlab }}.{{ domain_name }}",
-    "ssl_verify": false,
+    "api": "https://{{ external_subdomains.gitlab }}.{{ domain_name }}",
+    "ssl_verify": yes,
     "private_token": "{{ token }}",
     "oauth_token": "",
     "ldap_provider": "LDAP",

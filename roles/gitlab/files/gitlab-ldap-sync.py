@@ -137,7 +137,7 @@ if __name__ == "__main__":
                                                     filterstr='(objectClass=posixAccount)',
                                                     attrlist=['cn', 'uid', 'mail', 'gidNumber', 'sshPublicKey']):
                 for ldap_group in ldap_groups:
-                    if user_data['gidNumber'][0].decode() == ldap_group['gidNumber']:
+                    if user_data['gidNumber'][0].decode() == ldap_group['gidNumber'] and 'mail' in user_data.keys():
                         ldap_group["members"].append({
                             'username': user_data['uid'][0].decode(),
                             'name': user_data['cn'][0].decode(),

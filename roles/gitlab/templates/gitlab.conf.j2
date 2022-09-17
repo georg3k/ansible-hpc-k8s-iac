@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name {{ external_subdomains.lam }}.{{ domain_name }};
+    server_name {{ external_subdomains.gitlab }}.{{ domain_name }};
     
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
