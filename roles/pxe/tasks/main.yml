@@ -80,8 +80,11 @@
   
 - name: Generate kickstart.cfg template
   template:
-    src: kickstart.cfg.j2
-    dest: '/var/pxe/kickstart/kickstart.cfg'
+    src: "{{ item }}.cfg.j2"
+    dest: "/var/pxe/kickstart/{{ item }}.cfg"
+  with_items:
+    - "kickstart_web"
+    - "kickstart_gpu"
   
 - name: Generate PXE boot config file template
   template:
