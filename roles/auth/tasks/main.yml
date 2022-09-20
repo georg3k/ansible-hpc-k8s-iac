@@ -114,6 +114,7 @@
     zone: private
     permanent: yes
     state: enabled
+  when: inventory_hostname in groups.control_nodes
   notify: Reload firewalld
   
 - name: Install OpenLDAP client
@@ -226,12 +227,30 @@
     dest: /etc/ssh/ssh_known_hosts
     create: yes
     state: present
-    line: "{{ lookup('pipe', 'ssh-keyscan -trsa ' + hostvars[item].inventory_hostname + '.' + domain_name) }}"
+    line: "{{ lookup('pipe', 'ssh-keyscan ' + hostvars[item].inventory_hostname + '.' + domain_name) }}"
   failed_when: False
   ignore_errors: True
   with_items:
     - '{{ groups["control_nodes"] + groups["cpu_nodes"] + groups["gpu_nodes"] }}'
   notify: Restart SSH
+    
+- name: Ensure existance of certificates directory
+  file:
+    path: "/docker/certbot/conf/live/{{ external_subdomains.lam }}.{{ domain_name }}"
+    state: directory
+
+- name: Check the existence of SLL certificate
+  shell: test -e "/docker/certbot/conf/live/{{ external_subdomains.lam }}.{{ domain_name }}/privkey.pem"
+  register: cert_exists
+  ignore_errors: true
+  changed_when: false
+  when: inventory_hostname in groups.control_nodes
+
+- name: Generate dummy certificates
+  shell: |
+    openssl req -x509 -nodes -newkey rsa:4096 -days 1 -keyout "/docker/certbot/conf/live/{{ external_subdomains.lam }}.{{ domain_name }}/privkey.pem" -out "/docker/certbot/conf/live/{{ external_subdomains.lam }}.{{ domain_name }}/fullchain.pem" -subj '/CN=localhost'
+  when: ((inventory_hostname in groups.control_nodes) and
+        (cert_exists.rc != 0))
   
 - name: Generate NGINX reverse proxy template
   template:
@@ -240,6 +259,17 @@
     mode: 0600
   when: inventory_hostname in groups.control_nodes
   notify: Restart NGINX
+
+- name: Sync handlers
+  meta: flush_handlers
+
+- name: Renew certs
+  shell: |
+    rm -f /docker/certbot/conf/live/"{{ external_subdomains.lam }}.{{ domain_name }}"/*
+    docker exec certbot certbot run --webroot -w /var/www/certbot -d "{{ external_subdomains.lam }}.{{ domain_name }}" --rsa-key-size 4096 --agree-tos --force-renewal --email "{{ letsencrypt_email }}" -n
+  failed_when: False
+  when: ((inventory_hostname in groups.control_nodes) and
+        (cert_exists.rc != 0))
 
 - name: Sync handlers
   meta: flush_handlers

@@ -13,6 +13,7 @@
   ios_command:
     commands:
     - configure terminal
+    - "default {{ item.name }}"
     - "interface {{ item.name }}"
     - switchport mode access
     - "switchport access vlan {{ item.vlan }}"
@@ -25,9 +26,21 @@
   ios_command:
     commands:
     - configure terminal
+    - "default {{ item.name }}"
     - "interface {{ item.name }}"
     - switchport mode trunk
     - end
   with_items:
   - "{{ switched_interfaces }}"
   when: item.mode == "trunk"
+
+- name: Manage disabled interfaces
+  ios_command:
+    commands:
+    - configure terminal
+    - "interface {{ item.name }}"
+    - shutdown
+    - end
+  with_items:
+  - "{{ switched_interfaces }}"
+  when: item.mode == "disable"

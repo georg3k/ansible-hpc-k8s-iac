@@ -12,3 +12,8 @@ ansible_ssh_pass: '{{ readonly_password }}'
 
 # CISCO enable password
 ansible_become_password: '{{ admin_password }}'
+
+vlans:
+  - { name: 'public_cluster',  id: '1' }
+  - { name: 'management',      id: '2' }
+  - { name: 'WAN',             id: '3' }

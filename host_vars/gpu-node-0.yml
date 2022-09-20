@@ -10,7 +10,8 @@ interfaces:
 
 properties:
   cpus: 104
-  memory: 191912
+  memory: 174080
   sockets: 2
   cps: 26
   tpc: 2
+  gpu: 2

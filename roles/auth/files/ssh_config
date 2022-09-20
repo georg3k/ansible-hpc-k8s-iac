@@ -3,7 +3,6 @@
 Host *
     EnableSSHKeySign yes
     HostbasedAuthentication yes
-    UserKnownHostsFile /dev/null
     StrictHostKeyChecking no
     NoHostAuthenticationForLocalhost yes
     HostbasedKeyTypes ssh-rsa

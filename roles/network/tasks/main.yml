@@ -84,6 +84,13 @@
   when: item.type == "bond-slave"
   with_items:
     - "{{ interfaces }}"
+
+- name: Disable firewalld on cluster nodes
+  service:
+    name: firewalld
+    state: stopped
+    enabled: false
+  when: inventory_hostname not in groups.control_nodes
   
 - name: Ensure existence of firewall zones
   ansible.posix.firewalld:
@@ -94,6 +101,7 @@
     - private
     - public
     - management
+  when: inventory_hostname in groups.control_nodes
   notify: Reload firewalld
   
 - name: Add connections to corresponding firewall zones
@@ -102,8 +110,9 @@
     interface: '{{ item.name }}'
     permanent: yes
     state: enabled
-  when: (item.type == "ethernet") or
-        (item.type == "bond")
+  when: (inventory_hostname in groups.control_nodes) and
+        ((item.type == "ethernet") or
+        (item.type == "bond"))
   with_items:
     - "{{ interfaces }}"
   notify: Reload firewalld

@@ -91,5 +91,8 @@
     in_interface: "{{ item.name }}"
     source: "{{ networks.management.cidr | ipaddr('address') }}"
     jump: DROP
-  when: item.subnet == "public"
+  when: (inventory_hostname in groups.control_nodes) and
+        (((item.type == "ethernet") or
+        (item.type == "bond")) and
+        (item.subnet == "public"))
   with_items: "{{ interfaces }}"
