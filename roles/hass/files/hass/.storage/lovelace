@@ -1,5 +1,6 @@
 {
     "version": 1,
+    "minor_version": 1,
     "key": "lovelace",
     "data": {
         "config": {
@@ -91,7 +92,7 @@
                                 },
                                 {
                                     "type": "gauge",
-                                    "entity": "sensor.current_left",
+                                    "entity": "sensor.sonoff_00_current",
                                     "min": 0,
                                     "max": 20,
                                     "needle": true,
@@ -103,7 +104,7 @@
                                 },
                                 {
                                     "type": "gauge",
-                                    "entity": "sensor.current_mid",
+                                    "entity": "sensor.sonoff_01_current",
                                     "min": 0,
                                     "needle": true,
                                     "severity": {
@@ -115,7 +116,7 @@
                                 },
                                 {
                                     "type": "gauge",
-                                    "entity": "sensor.current_right",
+                                    "entity": "sensor.sonoff_02_current",
                                     "min": 0,
                                     "max": 20,
                                     "severity": {
@@ -126,23 +127,28 @@
                                     "needle": true
                                 },
                                 {
-                                    "type": "sensor",
-                                    "entity": "sensor.power_left",
+                                    "hours_to_show": 24,
                                     "graph": "line",
+                                    "type": "sensor",
+                                    "entity": "sensor.sonoff_00_power",
                                     "detail": 1,
                                     "icon": "mdi:lightning-bolt-outline"
                                 },
                                 {
-                                    "type": "sensor",
-                                    "entity": "sensor.power_mid",
+                                    "hours_to_show": 24,
                                     "graph": "line",
-                                    "icon": "mdi:lightning-bolt-outline"
+                                    "type": "sensor",
+                                    "entity": "sensor.sonoff_01_power",
+                                    "icon": "mdi:lightning-bolt-outline",
+                                    "detail": 1
                                 },
                                 {
-                                    "type": "sensor",
-                                    "entity": "sensor.power_right",
+                                    "hours_to_show": 24,
                                     "graph": "line",
-                                    "icon": "mdi:lightning-bolt-outline"
+                                    "type": "sensor",
+                                    "entity": "sensor.sonoff_02_power",
+                                    "icon": "mdi:lightning-bolt-outline",
+                                    "detail": 1
                                 }
                             ]
                         },
@@ -204,13 +210,13 @@
                             "type": "history-graph",
                             "entities": [
                                 {
-                                    "entity": "switch.sonoff_1000fd075e"
+                                    "entity": "switch.sonoff_00"
                                 },
                                 {
-                                    "entity": "switch.sonoff_1000fd0042"
+                                    "entity": "switch.sonoff_01"
                                 },
                                 {
-                                    "entity": "switch.sonoff_1000fd0781"
+                                    "entity": "switch.sonoff_02"
                                 }
                             ],
                             "hours_to_show": 24,

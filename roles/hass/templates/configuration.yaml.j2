@@ -36,34 +36,6 @@ sonoff:
   username: !secret sonoff_login
   password: !secret sonoff_pass
 
-sensor:
-- platform: template
-  sensors:
-    current_left:
-      friendly_name: Left PCB - current
-      unit_of_measurement: A
-      value_template: "{% raw %}{{ state_attr('switch.sonoff_00', 'current') }}{% endraw %}"
-    current_mid:
-      friendly_name: Mid PCB - current
-      unit_of_measurement: A
-      value_template: "{% raw %}{{ state_attr('switch.sonoff_01', 'current') }}{% endraw %}"
-    current_right:
-      friendly_name: Right PCB - current
-      unit_of_measurement: A
-      value_template: "{% raw %}{{ state_attr('switch.sonoff_02', 'current') }}{% endraw %}"
-    power_left:
-       friendly_name: Left PCB - power
-       unit_of_measurement: W
-       value_template: "{% raw %}{{ state_attr('switch.sonoff_00', 'power') }}{% endraw %}"
-    power_mid:
-       friendly_name: Mid PCB - power
-       unit_of_measurement: W
-       value_template: "{% raw %}{{ state_attr('switch.sonoff_01', 'power') }}{% endraw %}"
-    power_right:
-       friendly_name: Right PCB - power
-       unit_of_measurement: W
-       value_template: "{% raw %}{{ state_attr('switch.sonoff_02', 'power') }}{% endraw %}"
-
 script:
   learn_ac_commands:
     alias: Learn AC remote commands
