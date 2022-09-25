@@ -147,19 +147,35 @@
   failed_when: False
   when: inventory_hostname in groups.control_nodes
 
+- name: Import HASS integration temaplate from XML
+  local_action:
+    module: community.zabbix.zabbix_template
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    template_xml: "{{ lookup('file', 'hass_receiver.xml') }}"
+    state: present
+    validate_certs: False
+  changed_when: false
+  when: inventory_hostname in groups.control_nodes
+
 - name: Update ZABBIX server host entry
   community.zabbix.zabbix_host:
     server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
     host_name: "Zabbix server"
-    validate_certs: False
+    link_templates:
+    - "Linux by Zabbix agent"
+    - "Zabbix server health"
+    - "Template Home Assistant"
     interfaces:
     - type: agent
       main: 1
       useip: 0
       port: '10050'
       dns: zabbix_agent
+    validate_certs: False
   when: inventory_hostname in groups.control_nodes
 
 - name: Create ZABBIX host groups

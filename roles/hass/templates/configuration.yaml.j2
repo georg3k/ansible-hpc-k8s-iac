@@ -25,7 +25,7 @@ zabbix:
   path: /
   ssl: true
   username: Admin
-  password: {{ admin_password }}
+  password: !secret zabbix_pass
   publish_states_host: "Zabbix server"
   include:
     entities:
@@ -120,15 +120,6 @@ automation AC_control:
       below: '25'
     action:
     - service: script.ac_set_normal
-    mode: single
- 
-automation sonoff_update:
-  - alias: Update power consumption
-    trigger:
-    - platform: time_pattern
-      seconds: '0'
-    action:
-    - service: sonoff.update_consumption
     mode: single
     
 automation AC_rotation:
