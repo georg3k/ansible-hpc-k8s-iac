@@ -31,5 +31,8 @@ HostbasedAuthentication yes
 HostbasedAcceptedKeyTypes ssh-rsa
 UseDNS yes
 
+ClientAliveInterval 15
+ClientAliveCountMax 4
+
 Match Host *.example.com
     PermitRootLogin yes
