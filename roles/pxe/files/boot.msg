@@ -9,7 +9,8 @@ Architecture: x86_64
 
 Available boot options:
 
-  1 - Install CentOS 8 from PXE server
-  2 - Boot from local disk [default]
+  1 - Install CentOS 8 from PXE server (CPU nodes)
+  2 - Install CentOS 8 from PXE server (GPU nodes)
+  3 - Boot from local disk [default]
 
 

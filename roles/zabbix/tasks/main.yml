@@ -184,7 +184,7 @@
     login_user: Admin
     login_password: "{{ admin_password }}"
     host_groups:
-      - Web cluster nodes
+      - CPU cluster nodes
       - Compute cluster nodes
       - NAS
       - UPS
@@ -193,12 +193,12 @@
     validate_certs: False
   when: inventory_hostname in groups.control_nodes
 
-- name: Create ZABBIX discovery rule for web cluster nodes
+- name: Create ZABBIX discovery rule for CPU cluster nodes
   community.zabbix.zabbix_discovery_rule:
     server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
-    name: "Web cluster"
+    name: "CPU cluster"
     iprange: "{{ networks.private.cidr | ipaddr('address') | ipmath(99) }}-{{ [(networks.private.cidr | ipaddr('address')).split('.')[3] | int + 198, 254] | min }}"
     dchecks:
         - type: Zabbix
@@ -303,12 +303,12 @@
     status: enabled
   when: inventory_hostname in groups.control_nodes
 
-- name: Create discovery action for web cluster
+- name: Create discovery action for CPU cluster
   community.zabbix.zabbix_action:
     server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
     login_user: Admin
     login_password: "{{ admin_password }}"
-    name: "Web cluster group"
+    name: "CPU cluster group"
     event_source: 'discovery'
     state: present
     status: enabled
@@ -316,14 +316,14 @@
     conditions:
       - type: 'discovery_rule'
         operator: '='
-        value: 'Web cluster'
+        value: 'CPU cluster'
       - type: 'discovered_service_type'
         operator: '='
         value: 'Zabbix agent'
     operations:
       - type: add_host
       - type: add_to_host_group
-        host_groups: 'Web cluster nodes'
+        host_groups: 'CPU cluster nodes'
       - type: link_to_template
         templates:
           - 'Linux by Zabbix agent'
@@ -503,7 +503,7 @@
     rights:
       - host_group: "Zabbix servers"
         permission: read-write
-      - host_group: "Web cluster nodes"
+      - host_group: "CPU cluster nodes"
         permission: read-write
       - host_group: "Compute cluster nodes"
         permission: read-write
@@ -528,7 +528,7 @@
     rights:
       - host_group: "Zabbix servers"
         permission: read-only
-      - host_group: "Web cluster nodes"
+      - host_group: "CPU cluster nodes"
         permission: read-only
       - host_group: "Compute cluster nodes"
         permission: read-only

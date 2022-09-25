@@ -6,7 +6,7 @@ prompt  1
 label 1
   menu label ^Install CentOS 8 from PXE server (WEB node)
   kernel vmlinuz
-  append initrd=initrd.img showopts ks=nfs:{{ control_aliases.nfs }}.{{ domain_name }}:/var/pxe/kickstart/kickstart_web.cfg ip=dhcp net.ifnames=0 biosdevname=0
+  append initrd=initrd.img showopts ks=nfs:{{ control_aliases.nfs }}.{{ domain_name }}:/var/pxe/kickstart/kickstart_cpu.cfg ip=dhcp net.ifnames=0 biosdevname=0
 
 label 2
   menu label ^Install CentOS 8 from PXE server (GPU node)

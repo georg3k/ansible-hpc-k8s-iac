@@ -1,6 +1,6 @@
 ---
   
-- name: Web cluster nodes setup
+- name: CPU cluster nodes setup
   hosts: cpu_nodes
   become: True
   ignore_unreachable: True
