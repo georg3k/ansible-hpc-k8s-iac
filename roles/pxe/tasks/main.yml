@@ -83,7 +83,7 @@
     src: "{{ item }}.cfg.j2"
     dest: "/var/pxe/kickstart/{{ item }}.cfg"
   with_items:
-    - "kickstart_web"
+    - "kickstart_cpu"
     - "kickstart_gpu"
   
 - name: Generate PXE boot config file template

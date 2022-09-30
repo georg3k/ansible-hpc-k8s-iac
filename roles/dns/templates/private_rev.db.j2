@@ -14,10 +14,18 @@ $TTL 1m
     | ipaddr('revdns')).split('.')[0 : 4 - (((networks.private.cidr
     | ipaddr('prefix')) / 8) | int)]
     | join('.')) }} IN PTR {{ control_aliases.main }}.{{ domain_name }}.
-{% for host in groups["cpu_nodes"] %}
+{% for host in groups["k8s_nodes"] %}
 {{ "%-3s" | format ((networks.private.cidr
     | ipaddr('address')
     | ipmath(groups["cpu_nodes"].index(host) + 99)
+    | ipaddr('revdns')).split('.')[0 : 4 - (((networks.private.cidr
+    | ipaddr('prefix')) / 8) | int)]
+    | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.{{ domain_name }}. 
+{% endfor %}
+{% for host in groups["cpu_nodes"] %}
+{{ "%-3s" | format ((networks.private.cidr
+    | ipaddr('address')
+    | ipmath(groups["cpu_nodes"].index(host) + 149)
     | ipaddr('revdns')).split('.')[0 : 4 - (((networks.private.cidr
     | ipaddr('prefix')) / 8) | int)]
     | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.{{ domain_name }}. 

@@ -1,7 +1,10 @@
 ---
   
-- name: CPU cluster nodes setup
-  hosts: cpu_nodes
+- name: k8s nodes setup
+  hosts:
+  - k8s_nodes
+  - cpu_nodes
+  - gpu_nodes
   become: True
   ignore_unreachable: True
   roles:
@@ -14,15 +17,10 @@
   - ipmi
 
 - name: Compute cluster setup 
-  hosts: gpu_nodes
+  hosts:
+  - cpu_nodes
+  - gpu_nodes
   become: True
   ignore_unreachable: True
   roles:
-  - network
-  - chrony
-  - nas
-  - docker
-  - auth
   - slurm
-  - zabbix
-  - ipmi

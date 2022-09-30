@@ -16,8 +16,11 @@ $TTL 1m
 {% for alias in control_aliases.values() %}
 {{ "%-14s" | format(alias) }} IN A  {{ networks.private.cidr | ipaddr('address') }}
 {% endfor %}
-{% for host in groups["cpu_nodes"] %}
+{% for host in groups["k8s_nodes"] %}
 {{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 99) }}
+{% endfor %}
+{% for host in groups["cpu_nodes"] %}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 149) }}
 {% endfor %}
 {% for host in groups["gpu_nodes"] %}
 {{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["gpu_nodes"].index(host) + 199) }}

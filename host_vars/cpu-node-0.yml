@@ -7,3 +7,11 @@ interfaces:
   - { name: "bond0b0", type: "bond-slave", ifname: "eth0", master: "bond0" }
   - { name: "bond0b1", type: "bond-slave", ifname: "eth1", master: "bond0" }
   - { name: "ipmi",    type: "ethernet", mac: "04:00:00:00:00:00", subnet: "management" }
+
+properties:
+  cpus: 24
+  memory: 174080
+  sockets: 2
+  cps: 6
+  tpc: 2
+  gpu: 0

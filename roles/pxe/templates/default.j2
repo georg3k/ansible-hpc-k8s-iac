@@ -4,7 +4,7 @@ default 3
 prompt  1
 
 label 1
-  menu label ^Install CentOS 8 from PXE server (WEB node)
+  menu label ^Install CentOS 8 from PXE server (CPU node)
   kernel vmlinuz
   append initrd=initrd.img showopts ks=nfs:{{ control_aliases.nfs }}.{{ domain_name }}:/var/pxe/kickstart/kickstart_cpu.cfg ip=dhcp net.ifnames=0 biosdevname=0
 

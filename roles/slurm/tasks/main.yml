@@ -29,20 +29,22 @@
     src: /etc/munge/munge.key
     dest: /etc/munge/munge.key
   delegate_to: control-node
-  when: inventory_hostname in groups.gpu_nodes
+  when: (inventory_hostname in groups.gpu_nodes) or
+        (inventory_hostname in groups.cpu_nodes)
   notify: Restart slurm
 
 - name: Install slurm control node suite and RDMA (InfiniBand) tools
   dnf:
-    name: ['mailx', 'slurm-slurmctld', 'slurm-slurmdbd', 'slurm-slurmrestd', 'slurm-pmi', 'librdmacm', 'libibverbs', libibverbs-utils']
+    name: ['mailx', 'slurm-slurmctld', 'slurm-slurmdbd', 'slurm-slurmrestd', 'slurm-pmi', 'librdmacm', 'libibverbs', 'libibverbs-utils']
     state: latest
   when: inventory_hostname in groups.control_nodes
 
-- name: Install slurm cluster node suite and RDMA (InfiniBand) tools
+- name: Install slurm cluster node suite
   dnf:
-    name: ['slurm-slurmd', 'librdmacm', 'libibverbs', libibverbs-utils']
+    name: ['slurm-slurmd', 'librdmacm', 'libibverbs', 'libibverbs-utils']
     state: latest
-  when: inventory_hostname in groups.gpu_nodes
+  when: (inventory_hostname in groups.gpu_nodes) or
+        (inventory_hostname in groups.cpu_nodes)
 
 - name: Generate slurm.conf template
   template:
@@ -82,32 +84,8 @@
     name: slurmd
     state: restarted
     enabled: yes
-  when: inventory_hostname in groups.gpu_nodes
-
-- name: Allow slurmd traffic on compute nodes
-  ansible.posix.firewalld:
-    port: 6818/tcp
-    zone: private
-    permanent: yes
-    state: enabled
-  notify: Reload firewalld
-  when: inventory_hostname in groups.gpu_nodes
-
-- name: Allow slurmstepd traffic
-  ansible.posix.firewalld:
-    port: 50001-53000/tcp
-    zone: private
-    permanent: yes
-    state: enabled
-  notify: Reload firewalld
-
-- name: Allow MPI traffic
-  ansible.posix.firewalld:
-    port: 60001-63000/tcp
-    zone: private
-    permanent: yes
-    state: enabled
-  notify: Reload firewalld
+  when: (inventory_hostname in groups.gpu_nodes) or
+        (inventory_hostname in groups.cpu_nodes)
 
 - name: Undrain and enable compute nodes
   shell: |

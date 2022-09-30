@@ -38,28 +38,6 @@
     state: started
     enabled: yes
   
-- name: Create Docker Swarm cluster
-  community.docker.docker_swarm:
-    state: present
-    advertise_addr: '{{ networks.private.cidr | ipaddr("address") }}'
-    election_tick: 30
-  when: inventory_hostname in groups.control_nodes
-  
-- name: Save Docker Swarm join-token
-  shell: docker swarm join-token --quiet worker
-  register: worker_token
-  when: inventory_hostname in groups.control_nodes
-  changed_when: false
-  
-- name: Add nodes to Docker Swarm cluster
-  community.docker.docker_swarm:
-    state: join
-    advertise_addr: '{{ networks.private.cidr | ipaddr("address") }}'
-    join_token: '{{ worker_token.stdout }}'
-    remote_addrs: '{{ hostvars[item].inventory_hostname }}.{{ domain_name }}'
-  when: inventory_hostname in groups.control_nodes
-  with_items: '{{ groups["cpu_nodes"] }}'
-  
 - name: Add NFS exports
   lineinfile:
     path: /etc/exports

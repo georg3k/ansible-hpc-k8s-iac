@@ -1,11 +1,17 @@
 [control_nodes]
 control-node ansible_connection=local
 
+[k8s_nodes]
+k8s-node-0
+# add more
+
 [cpu_nodes]
 cpu-node-0
+# add more
 
 [gpu_nodes]
 gpu-node-0
+# add more
 
 [nas]
 nas-0
@@ -14,9 +20,9 @@ nas-0
 ups-0
 ups-1
 
-[cisco_routers]
+[cisco_switches]
 cisco-0
 cisco-1
 
-[mellanox_routers]
+[mellanox_switches]
 mellanox-0
