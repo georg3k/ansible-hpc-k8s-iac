@@ -14,7 +14,7 @@ $TTL 1m
 {{ "%-14s" | format(alias) }} IN A  {{ networks.management.cidr | ipaddr('address') }}
 {% endfor %}
 {% for host in groups["k8s_nodes"] %}
-{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 99) }}
+{{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["k8s_nodes"].index(host) + 99) }}
 {% endfor %}
 {% for host in groups["cpu_nodes"] %}
 {{ "%-14s" | format(hostvars[host].inventory_hostname) }} IN A  {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 149) }}

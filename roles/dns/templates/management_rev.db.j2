@@ -17,7 +17,7 @@ $TTL 1m
 {% for host in groups["k8s_nodes"] %}
 {{ "%-3s" | format ((networks.management.cidr
     | ipaddr('address')
-    | ipmath(groups["cpu_nodes"].index(host) + 99)
+    | ipmath(groups["k8s_nodes"].index(host) + 99)
     | ipaddr('revdns')).split('.')[0 : 4 - (((networks.management.cidr
     | ipaddr('prefix')) / 8) | int)]
     | join('.')) }} IN PTR {{ hostvars[host].inventory_hostname }}.management.{{ domain_name }}. 

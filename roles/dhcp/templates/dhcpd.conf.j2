@@ -32,7 +32,7 @@ subnet {{ networks.management.cidr | ipaddr('network') }} netmask {{ networks.ma
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 99) }};
+    fixed-address {{ (networks.private.cidr | ipaddr('address')) | ipmath(groups["k8s_nodes"].index(host) + 99) }};
     filename "/pxelinux.0";
 }
 {% endfor %}
@@ -43,7 +43,7 @@ host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
 
 host {{ hostvars[host].inventory_hostname + '-' + intf.name }} {
     hardware ethernet {{ intf.mac }};
-    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["cpu_nodes"].index(host) + 99) }};
+    fixed-address {{ (networks.management.cidr | ipaddr('address')) | ipmath(groups["k8s_nodes"].index(host) + 99) }};
 }
 {% endfor %}
 {% endfor %}
