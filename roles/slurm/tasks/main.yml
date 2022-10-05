@@ -86,12 +86,3 @@
     enabled: yes
   when: (inventory_hostname in groups.gpu_nodes) or
         (inventory_hostname in groups.cpu_nodes)
-
-- name: Undrain and enable compute nodes
-  shell: |
-    scontrol update NodeName={{ inventory_hostname }} State=DOWN Reason=Startup
-    scontrol update NodeName={{ inventory_hostname }} State=RESUME
-  changed_when: false
-  delegate_to: "{{ item }}"
-  with_items: "{{ groups.control_nodes }}"
-  when: inventory_hostname not in groups.control_nodes

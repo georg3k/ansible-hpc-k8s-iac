@@ -1,6 +1,6 @@
 # Ansible generated template, do not edit!
 
-ClusterName=ansible-hpc
+ClusterName=simplex-hpc
 SlurmctldHost=control-node
 MpiDefault=pmi2
 ProctrackType=proctrack/cgroup
@@ -33,7 +33,11 @@ SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurmctld.log
 SlurmdDebug=info
 SlurmdLogFile=/var/log/slurmd.log
+{% for node in groups.cpu_nodes %}
+NodeName={{ hostvars[node].inventory_hostname }} CPUs={{ hostvars[node].properties.cpus }} RealMemory={{ hostvars[node].properties.memory }} Sockets={{ hostvars[node].properties.sockets }} CoresPerSocket={{ hostvars[node].properties.cps }} ThreadsPerCore={{ hostvars[node].properties.tpc }} State=UNKNOWN
+{% endfor %}
 {% for node in groups.gpu_nodes %}
 NodeName={{ hostvars[node].inventory_hostname }} CPUs={{ hostvars[node].properties.cpus }} RealMemory={{ hostvars[node].properties.memory }} Sockets={{ hostvars[node].properties.sockets }} CoresPerSocket={{ hostvars[node].properties.cps }} ThreadsPerCore={{ hostvars[node].properties.tpc }} State=UNKNOWN
 {% endfor %}
-PartitionName=gpu-nodes Nodes=ALL Default=YES MaxTime=INFINITE State=UP
+PartitionName=gpu-nodes Nodes={{ groups.gpu_nodes | join(',') }} Default=YES MaxTime=INFINITE State=UP
+PartitionName=cpu-nodes Nodes={{ groups.cpu_nodes | join(',') }} Default=NO MaxTime=INFINITE State=UP
