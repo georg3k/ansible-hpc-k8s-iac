@@ -66,7 +66,6 @@
     name: munge
     state: started
     enabled: yes
-  when: inventory_hostname in groups.control_nodes
 
 - name: Start and enable slurm services on control node
   service:

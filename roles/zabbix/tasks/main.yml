@@ -165,6 +165,8 @@
     login_user: Admin
     login_password: "{{ admin_password }}"
     host_name: "Zabbix server"
+    host_groups:
+    - "Zabbix servers"
     link_templates:
     - "Linux by Zabbix agent"
     - "Zabbix server health"
@@ -184,290 +186,13 @@
     login_user: Admin
     login_password: "{{ admin_password }}"
     host_groups:
+      - k8s cluster nodes
       - CPU cluster nodes
-      - Compute cluster nodes
+      - GPU cluster nodes
       - NAS
       - UPS
       - CISCO switches
       - Mellanox switches
-    validate_certs: False
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create ZABBIX discovery rule for CPU cluster nodes
-  community.zabbix.zabbix_discovery_rule:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "CPU cluster"
-    iprange: "{{ networks.private.cidr | ipaddr('address') | ipmath(99) }}-{{ [(networks.private.cidr | ipaddr('address')).split('.')[3] | int + 198, 254] | min }}"
-    dchecks:
-        - type: Zabbix
-          key: "system.hostname"
-          name_source: DNS
-          ports: '10050'
-    validate_certs: False
-    state: present
-    status: enabled
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create ZABBIX discovery rule for compute cluster nodes
-  community.zabbix.zabbix_discovery_rule:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "Compute cluster"
-    iprange: "{{ networks.private.cidr | ipaddr('address') | ipmath(199) }}-{{ [(networks.private.cidr | ipaddr('address')).split('.')[3] | int + 299, 254] | min }}"
-    dchecks:
-        - type: Zabbix
-          key: "system.hostname"
-          name_source: DNS
-          ports: '10050'
-    validate_certs: False
-    state: present
-    status: enabled
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create ZABBIX discovery rule for NAS
-  community.zabbix.zabbix_discovery_rule:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "NAS"
-    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(69) }}-{{ (networks.management.cidr | ipaddr('address')).split('.')[3] | int + 78 }}"
-    dchecks:
-        - type: SNMPv2
-          snmp_community: hpc
-          ports: "161"
-          key: iso.3.6.1.2.1.1.1.0
-          uniq: no
-          name_source: DNS
-    validate_certs: False
-    state: present
-    status: enabled
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create ZABBIX discovery rule for UPS
-  community.zabbix.zabbix_discovery_rule:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "UPS"
-    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(89) }}-{{ (networks.management.cidr | ipaddr('address')).split('.')[3] | int + 98 }}"
-    dchecks:
-        - type: SNMPv2
-          snmp_community: hpc
-          ports: "161"
-          key: iso.3.6.1.2.1.1.1.0
-          uniq: no
-          name_source: DNS
-    validate_certs: False
-    state: present
-    status: enabled
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create ZABBIX discovery rule for CISCO switches
-  community.zabbix.zabbix_discovery_rule:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "CISCO switches"
-    iprange: "{{ networks.private.cidr | ipaddr('address') | ipmath(79) }}-{{ (networks.private.cidr | ipaddr('address')).split('.')[3] | int + 88 }}"
-    dchecks:
-        - type: SNMPv2
-          snmp_community: hpc
-          ports: "161"
-          key: iso.3.6.1.2.1.1.1.0
-          uniq: no
-          name_source: DNS
-    validate_certs: False
-    state: present
-    status: enabled
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create ZABBIX discovery rule for Mellanox switches
-  community.zabbix.zabbix_discovery_rule:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "Mellanox switches"
-    iprange: "{{ networks.management.cidr | ipaddr('address') | ipmath(89) }}-{{ (networks.management.cidr | ipaddr('address')).split('.')[3] | int + 98 }}"
-    dchecks:
-        - type: SNMPv2
-          snmp_community: hpc
-          ports: "161"
-          key: iso.3.6.1.2.1.1.1.0
-          uniq: no
-          name_source: DNS
-    validate_certs: False
-    state: present
-    status: enabled
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create discovery action for CPU cluster
-  community.zabbix.zabbix_action:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "CPU cluster group"
-    event_source: 'discovery'
-    state: present
-    status: enabled
-    esc_period: '60'
-    conditions:
-      - type: 'discovery_rule'
-        operator: '='
-        value: 'CPU cluster'
-      - type: 'discovered_service_type'
-        operator: '='
-        value: 'Zabbix agent'
-    operations:
-      - type: add_host
-      - type: add_to_host_group
-        host_groups: 'CPU cluster nodes'
-      - type: link_to_template
-        templates:
-          - 'Linux by Zabbix agent'
-      - type: link_to_template
-        templates:
-          - 'Chassis by IPMI'
-      - type: set_host_inventory_mode
-        inventory: automatic
-    validate_certs: False
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create discovery action for compute cluster
-  community.zabbix.zabbix_action:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "Compute cluster group"
-    event_source: 'discovery'
-    state: present
-    status: enabled
-    esc_period: '60'
-    conditions:
-      - type: 'discovery_rule'
-        operator: '='
-        value: 'Compute cluster'
-      - type: 'discovered_service_type'
-        operator: '='
-        value: 'Zabbix agent'
-    operations:
-      - type: add_host
-      - type: add_to_host_group
-        host_groups: 'Compute cluster nodes'
-      - type: link_to_template
-        templates:
-          - 'Linux by Zabbix agent'
-      - type: link_to_template
-        templates:
-          - 'Chassis by IPMI'
-      - type: set_host_inventory_mode
-        inventory: automatic
-    validate_certs: False
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create discovery action for NAS
-  community.zabbix.zabbix_action:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "NAS group"
-    event_source: 'discovery'
-    state: present
-    status: enabled
-    esc_period: '60'
-    conditions:
-      - type: 'discovery_rule'
-        operator: '='
-        value: 'NAS'
-    operations:
-      - type: add_host
-      - type: add_to_host_group
-        host_groups: 'NAS'
-      - type: link_to_template
-        templates:
-          - 'Generic SNMP' 
-      - type: set_host_inventory_mode
-        inventory: automatic
-    validate_certs: False
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create discovery action for UPS
-  community.zabbix.zabbix_action:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "UPS group"
-    event_source: 'discovery'
-    state: present
-    status: enabled
-    esc_period: '60'
-    conditions:
-      - type: 'discovery_rule'
-        operator: '='
-        value: 'UPS'
-    operations:
-      - type: add_host
-      - type: add_to_host_group
-        host_groups: 'UPS'
-      - type: link_to_template
-        templates:
-          - 'APC UPS SNMP'
-      - type: set_host_inventory_mode
-        inventory: automatic
-    validate_certs: False
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create discovery action for CISCO switches
-  community.zabbix.zabbix_action:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "CISCO switches group"
-    event_source: 'discovery'
-    state: present
-    status: enabled
-    esc_period: '60'
-    conditions:
-      - type: 'discovery_rule'
-        operator: '='
-        value: 'CISCO switches'
-    operations:
-      - type: add_host
-      - type: add_to_host_group
-        host_groups: 'CISCO switches'
-      - type: link_to_template
-        templates:
-          - 'Cisco IOS SNMP'
-      - type: set_host_inventory_mode
-        inventory: automatic
-    validate_certs: False
-  when: inventory_hostname in groups.control_nodes
-
-- name: Create discovery action for Mellanox switches
-  community.zabbix.zabbix_action:
-    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
-    login_user: Admin
-    login_password: "{{ admin_password }}"
-    name: "Mellanox switches group"
-    event_source: 'discovery'
-    state: present
-    status: enabled
-    esc_period: '60'
-    conditions:
-      - type: 'discovery_rule'
-        operator: '='
-        value: 'Mellanox switches'
-    operations:
-      - type: add_host
-      - type: add_to_host_group
-        host_groups: 'Mellanox switches'
-      - type: link_to_template
-        templates:
-          - 'Mellanox SNMP' 
-      - type: set_host_inventory_mode
-        inventory: automatic
     validate_certs: False
   when: inventory_hostname in groups.control_nodes
 
@@ -503,9 +228,11 @@
     rights:
       - host_group: "Zabbix servers"
         permission: read-write
+      - host_group: "k8s cluster nodes"
+        permission: read-write
       - host_group: "CPU cluster nodes"
         permission: read-write
-      - host_group: "Compute cluster nodes"
+      - host_group: "GPU cluster nodes"
         permission: read-write
       - host_group: "UPS"
         permission: read-write
@@ -528,9 +255,11 @@
     rights:
       - host_group: "Zabbix servers"
         permission: read-only
+      - host_group: "k8s cluster nodes"
+        permission: read-write
       - host_group: "CPU cluster nodes"
         permission: read-only
-      - host_group: "Compute cluster nodes"
+      - host_group: "GPU cluster nodes"
         permission: read-only
       - host_group: "UPS"
         permission: read-only
@@ -586,15 +315,6 @@
     enabled: true
   when: inventory_hostname not in groups.control_nodes
 
-#- name: Allow ZABBIX agent traffic
-#  ansible.posix.firewalld:
-#    port: 10050/tcp
-#    zone: private
-#    permanent: yes
-#    state: enabled
-#  notify: Reload firewalld
-#  when: inventory_hostname not in groups.control_nodes
-
 - name: Install ZABBIX LDAP sync script dnf dependencies
   dnf:
     name: ['gcc-toolset-11', 'python3-devel', 'openldap-devel']
@@ -627,4 +347,214 @@
     user: root
     job: "/root/zabbix-ldap-sync.py"
     cron_file: zabbix_ldap
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create k8h hosts
+  community.zabbix.zabbix_host:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_name: "{{ hostvars[item].inventory_hostname }}"
+    host_groups:
+    - "k8s cluster nodes"
+    inventory_mode: automatic
+    link_templates:
+    - "Linux by Zabbix agent"
+    - "Chassis by IPMI"
+    ipmi_privilege: 2
+    ipmi_username: admin
+    ipmi_password: admin
+    interfaces:
+    - type: agent
+      main: 1
+      useip: 0
+      port: '10050'
+      ip: "{{ (networks.private.cidr | ipaddr('address')) | ipmath(groups['k8s_nodes'].index(item) + 99) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.' + domain_name }}"
+    - type: ipmi
+      main: 1
+      useip: 0
+      port: '623'
+      ip: "{{ (networks.management.cidr | ipaddr('address')) | ipmath(groups['k8s_nodes'].index(item) + 99) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.management.' + domain_name }}"
+    validate_certs: False
+    state: present
+  with_items:
+    - '{{ groups["k8s_nodes"] }}'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create CPU hosts
+  community.zabbix.zabbix_host:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_name: "{{ hostvars[item].inventory_hostname }}"
+    host_groups:
+    - "CPU cluster nodes"
+    inventory_mode: automatic
+    link_templates:
+    - "Linux by Zabbix agent"
+    - "Chassis by IPMI"
+    ipmi_privilege: 2
+    ipmi_username: admin
+    ipmi_password: admin
+    interfaces:
+    - type: agent
+      main: 1
+      useip: 0
+      port: '10050'
+      ip: "{{ (networks.private.cidr | ipaddr('address')) | ipmath(groups['cpu_nodes'].index(item) + 149) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.' + domain_name }}"
+    - type: ipmi
+      main: 1
+      useip: 0
+      port: '623'
+      ip: "{{ (networks.management.cidr | ipaddr('address')) | ipmath(groups['cpu_nodes'].index(item) + 149) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.management.' + domain_name }}"
+    validate_certs: False
+    state: present
+  with_items:
+    - '{{ groups["cpu_nodes"] }}'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create GPU hosts
+  community.zabbix.zabbix_host:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_name: "{{ hostvars[item].inventory_hostname }}"
+    host_groups:
+    - "GPU cluster nodes"
+    inventory_mode: automatic
+    link_templates:
+    - "Linux by Zabbix agent"
+    - "Chassis by IPMI"
+    ipmi_privilege: 2
+    ipmi_username: admin
+    ipmi_password: admin
+    interfaces:
+    - type: agent
+      main: 1
+      useip: 0
+      port: '10050'
+      ip: "{{ (networks.private.cidr | ipaddr('address')) | ipmath(groups['gpu_nodes'].index(item) + 199) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.' + domain_name }}"
+    - type: ipmi
+      main: 1
+      useip: 0
+      port: '623'
+      ip: "{{ (networks.management.cidr | ipaddr('address')) | ipmath(groups['gpu_nodes'].index(item) + 199) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.management.' + domain_name }}"
+    validate_certs: False
+    state: present
+  with_items:
+    - '{{ groups["gpu_nodes"] }}'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create NAS hosts
+  community.zabbix.zabbix_host:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_name: "{{ hostvars[item].inventory_hostname }}"
+    host_groups:
+    - "NAS"
+    inventory_mode: automatic
+    link_templates:
+    - "Generic SNMP"
+    interfaces:
+    - type: snmp
+      main: 1
+      useip: 0
+      port: '161'
+      ip: "{{ (networks.private.cidr | ipaddr('address')) | ipmath(groups['nas'].index(item) + 69) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '-management.' + domain_name }}"
+      details:
+        version: 2
+        community: hpc
+    validate_certs: False
+    state: present
+  with_items:
+    - '{{ groups["nas"] }}'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create UPS hosts
+  community.zabbix.zabbix_host:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_name: "{{ hostvars[item].inventory_hostname }}"
+    host_groups:
+    - "UPS"
+    inventory_mode: automatic
+    link_templates:
+    - "APC UPS SNMP"
+    interfaces:
+    - type: snmp
+      main: 1
+      useip: 0
+      port: '161'
+      ip: "{{ (networks.management.cidr | ipaddr('address')) | ipmath(groups['ups'].index(item) + 89) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.management.' + domain_name }}"
+      details:
+        version: 2
+        community: hpc
+    validate_certs: False
+    state: present
+  with_items:
+    - '{{ groups["ups"] }}'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create CISCO switches hosts
+  community.zabbix.zabbix_host:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_name: "{{ hostvars[item].inventory_hostname }}"
+    host_groups:
+    - "CISCO switches"
+    inventory_mode: automatic
+    link_templates:
+    - "Cisco IOS SNMP"
+    interfaces:
+    - type: snmp
+      main: 1
+      useip: 0
+      port: '161'
+      ip: "{{ (networks.private.cidr | ipaddr('address')) | ipmath(groups['cisco_switches'].index(item) + 79) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.' + domain_name }}"
+      details:
+        version: 2
+        community: hpc
+    validate_certs: False
+    state: present
+  with_items:
+    - '{{ groups["cisco_switches"] }}'
+  when: inventory_hostname in groups.control_nodes
+
+- name: Create Mellanox switches hosts
+  community.zabbix.zabbix_host:
+    server_url: "https://{{ external_subdomains.zabbix }}.{{ domain_name }}"
+    login_user: Admin
+    login_password: "{{ admin_password }}"
+    host_name: "{{ hostvars[item].inventory_hostname }}"
+    host_groups:
+    - "Mellanox switches"
+    inventory_mode: automatic
+    link_templates:
+    - "Mellanox SNMP"
+    interfaces:
+    - type: snmp
+      main: 1
+      useip: 0
+      port: '161'
+      ip: "{{ (networks.private.cidr | ipaddr('address')) | ipmath(groups['mellanox_switches'].index(item) + 89) }}"
+      dns: "{{ hostvars[item].inventory_hostname + '.' + domain_name }}"
+      details:
+        version: 2
+        community: hpc
+    validate_certs: False
+    state: present
+  with_items:
+    - '{{ groups["mellanox_switches"] }}'
   when: inventory_hostname in groups.control_nodes
