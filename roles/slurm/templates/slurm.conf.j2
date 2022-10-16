@@ -41,4 +41,4 @@ NodeName={{ hostvars[node].inventory_hostname }} CPUs={{ hostvars[node].properti
 {% endfor %}
 PartitionName=gpu-nodes   Nodes={{ groups.gpu_nodes | join(',') }} Default=YES MaxTime=INFINITE State=UP
 PartitionName=cpu-nodes   Nodes={{ groups.cpu_nodes | join(',') }} Default=NO MaxTime=INFINITE State=UP
-PartitionName=mixed-nodes Nodes={{ groups.cpu_nodes | join(',') }},{{ groups.cpu_nodes | join(',') }} Default=NO MaxTime=INFINITE State=UP
+PartitionName=mixed-nodes Nodes={{ groups.gpu_nodes | join(',') }},{{ groups.cpu_nodes | join(',') }} Default=NO MaxTime=INFINITE State=UP
