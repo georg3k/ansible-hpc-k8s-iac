@@ -1,0 +1,27 @@
+---
+
+- name: Disable mounting swap partition on boot
+  ansible.posix.mount:
+    fstype: swap
+    state: absent
+
+- name: Disable swap partition
+  shell: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: Install Kubernetes
+  dnf:
+    name: ['kubelet', 'kubeadm', 'kubectl']
+    state: latest
+
+- name: Start and enable kubelet
+  service:
+    name: kubelet
+    state: started
+    enabled: yes
+
+- name: Initialize the Kubernetes cluster using kubeadm
+  command: kubeadm init --apiserver-advertise-address="192.168.50.10" --apiserver-cert-extra-sans="192.168.50.10"  --node-name k8s-master --pod-network-cidr=192.168.0.0/16
+  when: inventory_hostname in groups.control_nodes
+
+
