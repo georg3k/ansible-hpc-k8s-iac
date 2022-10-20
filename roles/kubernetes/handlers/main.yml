@@ -2,3 +2,11 @@
 
 - name: Reload firewalld
   shell: 'firewall-cmd --reload'
+
+- name: Reload containerd
+  service:
+    name: containerd
+    state: restarted
+
+- name: Reload sysctl
+  shell: sysctl --system

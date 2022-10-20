@@ -24,3 +24,11 @@
   ignore_unreachable: True
   roles:
   - slurm
+
+- name: Kubernetes cluster setup 
+  hosts:
+  - k8s_nodes
+  become: True
+  ignore_unreachable: True
+  roles:
+  - kubernetes
