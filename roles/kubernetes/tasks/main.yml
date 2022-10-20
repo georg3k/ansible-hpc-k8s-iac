@@ -2,8 +2,12 @@
 
 - name: Disable mounting swap partition on boot
   ansible.posix.mount:
+    name: "{{ item }}"
     fstype: swap
     state: absent
+  with_items:
+    - swap
+    - none
 
 - name: Disable swap partition
   shell: swapoff -a
@@ -20,7 +24,25 @@
 - name: Install Kubernetes
   dnf:
     name: ['kubelet', 'kubeadm', 'kubectl']
+    disable_gpg_check: yes
     state: latest
+
+- name: Allow k8s traffic
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    zone: private
+    permanent: yes
+    state: enabled
+  with_items:
+    - '6443/tcp'
+    - '2379-2380/tcp'
+    - '10250/tcp'
+    - '10251/tcp'
+    - '10252/tcp'
+    - '10255/tcp'
+    - '8472/udp'
+  when: inventory_hostname in groups.control_nodes
+  notify: Reload firewalld
 
 - name: Start and enable kubelet
   service:
@@ -29,7 +51,7 @@
     enabled: yes
 
 - name: Initialize the Kubernetes cluster using kubeadm
-  command: kubeadm init --apiserver-advertise-address="192.168.50.10" --apiserver-cert-extra-sans="192.168.50.10"  --node-name k8s-master --pod-network-cidr=192.168.0.0/16
+  command: kubeadm init --apiserver-advertise-address="{{ networks.private.cidr | ipaddr('address') }}" --node-name "{{ inventory_hostname }}" --pod-network-cidr=192.168.0.0/16
   when: inventory_hostname in groups.control_nodes
 
 
