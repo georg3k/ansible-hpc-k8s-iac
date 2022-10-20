@@ -9,6 +9,14 @@
   shell: swapoff -a
   when: ansible_swaptotal_mb > 0
 
+- name: Add Kubernetes repo
+  copy:
+    src: kubernetes.repo
+    dest: /etc/yum.repos.d/kubernetes.repo
+    mode: 0664
+    owner: root
+    group: root
+
 - name: Install Kubernetes
   dnf:
     name: ['kubelet', 'kubeadm', 'kubectl']
