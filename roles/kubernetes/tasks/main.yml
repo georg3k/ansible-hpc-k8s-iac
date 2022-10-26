@@ -13,6 +13,20 @@
   shell: swapoff -a
   when: ansible_swaptotal_mb > 0
 
+- name: Disable SELinux
+  ansible.posix.selinux:
+    state: disabled
+
+- name: Enable iptables
+  lineinfile:
+    path: /etc/sysctl.d/k8s.conf
+    line: "{{ item }}"
+    create: yes
+  with_items:
+    - 'net.bridge.bridge-nf-call-ip6tables = 1'
+    - 'net.bridge.bridge-nf-call-iptables = 1'
+  notify: Reload sysctl
+
 - name: Add Kubernetes repo
   copy:
     src: kubernetes.repo
@@ -24,8 +38,7 @@
 - name: Install Kubernetes
   dnf:
     name: ['kubelet', 'kubeadm', 'kubectl']
-    disable_gpg_check: yes
-    state: latest
+    state: present
 
 - name: Allow k8s traffic
   ansible.posix.firewalld:
@@ -40,7 +53,7 @@
     - '10251/tcp'
     - '10252/tcp'
     - '10255/tcp'
-    - '8472/udp'
+    - '30000-32767/tcp'
   when: inventory_hostname in groups.control_nodes
   notify: Reload firewalld
 
@@ -50,8 +63,109 @@
     state: started
     enabled: yes
 
+- name: Check if kubeadm was initialized before
+  shell: test "$(ls /var/lib/etcd)"
+  failed_when: false
+  changed_when: false
+  register: kubeadm_initialized
+
 - name: Initialize the Kubernetes cluster using kubeadm
-  command: kubeadm init --apiserver-advertise-address="{{ networks.private.cidr | ipaddr('address') }}" --node-name "{{ inventory_hostname }}" --pod-network-cidr=192.168.0.0/16
+  shell: kubeadm init --apiserver-advertise-address="{{ networks.private.cidr | ipaddr('address') }}" --pod-network-cidr=192.168.0.0/16
+  when: (inventory_hostname in groups.control_nodes) and
+        (kubeadm_initialized.rc != 0)
+  notify: Reload containerd
+
+- name: Create k8s config directory
+  file:
+    path: /root/.kube
+    state: directory
+    mode: 0600
+  when: (inventory_hostname in groups.control_nodes) and
+        (kubeadm_initialized.rc != 0)
+
+- name: Copy k8s configuration file
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+  when: (inventory_hostname in groups.control_nodes) and
+        (kubeadm_initialized.rc != 0)
+
+- name: Install calico pod network
+  shell: |
+    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/tigera-operator.yaml
+    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/custom-resources.yaml
+  failed_when: false
+  changed_when: false
+  when: (inventory_hostname in groups.control_nodes) and
+        (kubeadm_initialized.rc != 0)
+
+- name: Create k8s shared directory
+  file:
+    path: /docker/kubernetes
+    state: directory
+    mode: 0600
+  when: (inventory_hostname in groups.control_nodes) and
+        (kubeadm_initialized.rc != 0)
+
+- name: Generate join command
+  shell: kubeadm token create --print-join-command
+  register: join_command
+  when: (inventory_hostname in groups.control_nodes) and
+        (kubeadm_initialized.rc != 0)
+
+- name: Copy join command to a file
+  copy:
+    content: "{{ join_command.stdout_lines[0] }}"
+    dest: "/docker/kubernetes/join-command.sh"
+    mode: 0600
+  when: (inventory_hostname in groups.control_nodes) and
+        (kubeadm_initialized.rc != 0)
+
+- name: Check if node was initialized before
+  shell: test "$(ls /etc/kubernetes/kubelet.conf)"
+  failed_when: false
+  changed_when: false
+  register: node_initialized
+  when: inventory_hostname not in groups.control_nodes
+
+- name: Join the node to cluster
+  shell: sh /docker/kubernetes/join-command.sh
+  when: (inventory_hostname not in groups.control_nodes) and
+        (node_initialized.rc != 0)
+  notify: Reload containerd
+
+- name: Upload MetalLB load balancer manifest
+  copy:
+    src: metallb-native.yaml
+    dest: /tmp/metallb-native.yaml
+
+- name: Install MetalLB load balancer
+  kubernetes.core.k8s:
+    state: present
+    src: /tmp/metallb-native.yaml
   when: inventory_hostname in groups.control_nodes
 
+- name: Define MetalLB address pool
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: metallb.io/v1beta1
+      kind: IPAddressPool
+      metadata:
+        name: lb-pool
+        namespace: metallb-system
+      spec:
+        addresses:
+        - "{{ (networks.private.cidr | ipaddr('address')) | ipmath(229) }}-{{ (networks.private.cidr | ipaddr('address')) | ipmath(253) }}"
+  when: inventory_hostname in groups.control_nodes
 
+- name: Define MetalLB pool advertisment
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: metallb.io/v1beta1
+      kind: L2Advertisement
+      metadata:
+        name: metallb-advertisment
+        namespace: metallb-system
+  when: inventory_hostname in groups.control_nodes
