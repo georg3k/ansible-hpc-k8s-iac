@@ -12,7 +12,10 @@
 
 ## Infrastructure as Code
 
-The purpose of this project is to provide an automated environment for setting up and managing HPC clusters. 
+The purpose of this project is to provide an automated environment for setting up and managing HPC clusters (and other stuff).
+
+> **Note**
+> This project was originally meant to be a tool for automatic HPC cluster configuration and maintenance, however over time it became a single point of management for my local lab cluster and includes various somehow unrelated services. It is not advisable to use such a monolithic project to control and maintain all of your infrastructure, however in a lab environment it does serve well. You can use this project as a cookbook and take separate roles that you actually need. Currently it can be used to configure all kind of clusters (LDAP and ssh auth, DHCP, DNS, NTP, PXE boot, IPMI, etc), HPC clusters (Slurm), deploy monitoring (Zabbix), high-availability clusters (Kubernetes), Gitlab instances, Ingress and SSL termination points (Nginx reverse proxy) and other...
 
 ## Quick start
 
@@ -178,6 +181,14 @@ Infrastructure monitoring:
     * Discovery rules
     * Installs special script that implements LDAP accounts synchronization similar to Gitlab \
       Script project: [https://github.com/georg3k/zabbix-ldap-sync](https://github.com/georg3k/zabbix-ldap-sync)
+* apcupsd \
+Automatic UPS shutdown on power loss:
+    * Installs and configures apcupsd
+* Kubernetes \
+Kubernetes high-availability cluster:
+    * Uses kubeadm
+    * Calico as network backend
+    * MetalLB as load balancer
 
 ### Roles structure
 
